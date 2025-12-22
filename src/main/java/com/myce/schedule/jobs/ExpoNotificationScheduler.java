@@ -5,6 +5,7 @@ import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
+import com.myce.expo.service.component.ExpoReminderComponent;
 import com.myce.notification.service.NotificationService;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
@@ -24,7 +25,7 @@ import java.util.List;
 public class ExpoNotificationScheduler implements TaskScheduler {
 
     private final ExpoRepository expoRepository;
-    private final NotificationService notificationService;
+    private final ExpoReminderComponent expoReminderComponent;
 
     @Value("${scheduler.expo-notification:0 0 9 * * *}")
     private String cronExpression;
@@ -61,7 +62,7 @@ public class ExpoNotificationScheduler implements TaskScheduler {
 
         // 각 박람회에 대해 시작 알림 전송
         for (Expo expo : exposStartingTomorrow) {
-            notificationService.sendExpoStartNotification(expo.getId());
+            expoReminderComponent.notifyExpoStart(expo);
             log.info("[Scheduler] 박람회 시작 알림 전송 완료 - 박람회: {}", expo.getTitle());
         }
     }

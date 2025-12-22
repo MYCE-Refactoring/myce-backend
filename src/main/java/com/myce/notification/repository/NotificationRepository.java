@@ -1,6 +1,8 @@
 package com.myce.notification.repository;
 
 import com.myce.notification.document.Notification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -10,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface NotificationRepository extends MongoRepository<Notification, String> {
-    List<Notification> findByMemberId(Long memberId, Sort sort);
+    Page<Notification> findByMemberId(Long memberId, Pageable pageable);
     
     @Query("{'_id': ?0, 'memberId': ?1}")
     @Update("{'$set': {'isRead': true, 'readAt': ?2}}")

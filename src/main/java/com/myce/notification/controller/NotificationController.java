@@ -5,6 +5,8 @@ import com.myce.notification.dto.NotificationResponse;
 import com.myce.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +22,13 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    public ResponseEntity<List<NotificationResponse>> getNotifications(
-            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+    public ResponseEntity<Page<NotificationResponse>> getNotifications(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            Pageable pageable) {
         Long memberId = customUserDetails.getMemberId();
-        List<NotificationResponse> notifications = notificationService.getNotificationsByMemberId(memberId);
-        return ResponseEntity.ok(notifications);
+        Page<NotificationResponse> page =
+                notificationService.getNotificationsByMemberId(memberId, pageable);
+        return ResponseEntity.ok(page);
     }
 
     @PutMapping("/{notificationId}/read")

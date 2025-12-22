@@ -4,6 +4,7 @@ import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.notification.service.NotificationService;
+import com.myce.qrcode.component.QrIssueComponent;
 import com.myce.qrcode.repository.QrCodeRepository;
 import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.entity.Reserver;
@@ -27,11 +28,11 @@ import org.springframework.stereotype.Component;
 public class ExpoQrGenerateScheduler implements TaskScheduler {
 
     private final ExpoRepository expoRepository;
-    private final ReservationRepository reservationRepository;
     private final ReserverRepository reserverRepository;
     private final QrCodeService qrCodeService;
     private final QrCodeRepository qrCodeRepository;
-    private final NotificationService notificationService;
+
+    private final QrIssueComponent qrIssueComponent;
 
     @Value("${scheduler.expo-qr-generate:0 0 0 * * *}")
     private String cronExpression;
@@ -112,15 +113,10 @@ public class ExpoQrGenerateScheduler implements TaskScheduler {
         // 2단계: QR 생성이 성공한 예약들에 대해 알림 전송
         int notificationCount = 0;
         for (Long reservationId : processedReservations) {
-            try {
-                notificationService.sendQrIssuedNotificationByReservationId(reservationId);
-                notificationCount++;
-                log.debug("QR 발급 알림 전송 완료 - 예약 ID: {}", reservationId);
-            } catch (Exception e) {
-                log.error("QR 발급 알림 전송 실패 - 예약 ID: {}, 오류: {}", 
-                        reservationId, e.getMessage());
-            }
+            qrIssueComponent.notifyQrIssuedByReservation(reservationId, false);
+            notificationCount++;
         }
+
         
         log.info("박람회 QR코드 생성 완료 - 박람회: {}, 성공: {} 명, 실패: {} 명, 알림 전송: {} 건", 
                 expo.getTitle(), successCount, failCount, notificationCount);

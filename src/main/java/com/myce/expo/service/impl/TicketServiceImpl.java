@@ -7,6 +7,7 @@ import com.myce.expo.dto.TicketSummaryResponse;
 import com.myce.expo.entity.Ticket;
 import com.myce.expo.repository.TicketRepository;
 import com.myce.expo.service.TicketService;
+import com.myce.expo.service.mapper.TicketMapper;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,21 +20,10 @@ public class TicketServiceImpl implements TicketService {
 
   @Override
   public List<TicketSummaryResponse> getTickets(Long expoId) {
-            List<Ticket> tickets = ticketRepository.findByExpoIdOrderByTypeAscSaleStartDateAsc(expoId);
+    List<Ticket> tickets =
+            ticketRepository.findByExpoIdOrderByTypeAscSaleStartDateAsc(expoId);
 
-    return tickets.stream()
-        .map(t -> TicketSummaryResponse.builder()
-            .ticketId(t.getId())
-            .name(t.getName())
-            .type(t.getType())
-            .price(t.getPrice())
-            .remainingQuantity(t.getRemainingQuantity())
-            .saleStartDate(t.getSaleStartDate())
-            .saleEndDate(t.getSaleEndDate())
-            .description(t.getDescription())
-            .build()
-        )
-        .toList();
+    return TicketMapper.toSummaryResponses(tickets);
   }
 
   // 티켓 수량 동시성 확인 및 restore과 동일하게 ticketId와 quantity로 인자값 처리
