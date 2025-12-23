@@ -1,20 +1,16 @@
 package com.myce.notification.service.impl;
 
-import com.myce.advertisement.entity.Advertisement;
 import com.myce.advertisement.entity.type.AdvertisementStatus;
-import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.notification.document.Notification;
 import com.myce.notification.dto.ExpoStatusChangeCommand;
 import com.myce.notification.dto.AdStatusChangeCommand;
 import com.myce.notification.dto.NotificationResponse;
-import com.myce.notification.entity.type.NotificationType;
-import com.myce.notification.entity.type.NotificationTargetType;
+import com.myce.notification.document.type.NotificationType;
+import com.myce.notification.document.type.NotificationTargetType;
 import com.myce.notification.repository.NotificationRepository;
 import com.myce.notification.service.NotificationService;
 import com.myce.notification.service.SseService;
-import com.myce.reservation.entity.Reservation;
-import com.myce.reservation.entity.code.UserType;
 import com.myce.system.entity.MessageTemplateSetting;
 import com.myce.system.entity.type.ChannelType;
 import com.myce.system.entity.type.MessageTemplateCode;
@@ -36,8 +32,6 @@ import static com.myce.system.entity.type.MessageTemplateCode.QR_ISSUED;
 import static com.myce.system.entity.type.MessageTemplateCode.QR_REISSUED;
 import static com.myce.system.entity.type.MessageTemplateCode.PAYMENT_COMPLETE;
 import static com.myce.system.entity.type.MessageTemplateCode.EVENT_REMINDER;
-
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor

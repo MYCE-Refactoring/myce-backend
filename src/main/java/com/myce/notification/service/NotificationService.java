@@ -3,8 +3,8 @@ package com.myce.notification.service;
 import com.myce.notification.dto.AdStatusChangeCommand;
 import com.myce.notification.dto.ExpoStatusChangeCommand;
 import com.myce.notification.dto.NotificationResponse;
-import com.myce.notification.entity.type.NotificationTargetType;
-import com.myce.notification.entity.type.NotificationType;
+import com.myce.notification.document.type.NotificationTargetType;
+import com.myce.notification.document.type.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

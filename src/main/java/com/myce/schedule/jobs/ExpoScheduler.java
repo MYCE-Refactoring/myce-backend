@@ -1,6 +1,6 @@
 package com.myce.schedule.jobs;
 
-import com.myce.expo.service.SystemExpoService;
+import com.myce.expo.service.platform.SystemExpoService;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

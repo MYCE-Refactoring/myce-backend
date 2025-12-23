@@ -1,7 +1,7 @@
 package com.myce.notification.document;
 
-import com.myce.notification.entity.type.NotificationType;
-import com.myce.notification.entity.type.NotificationTargetType;
+import com.myce.notification.document.type.NotificationType;
+import com.myce.notification.document.type.NotificationTargetType;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

@@ -6,7 +6,7 @@ import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.Ticket;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
-import com.myce.expo.service.TicketService;
+import com.myce.expo.service.info.TicketService;
 import com.myce.payment.dto.PaymentInfoDetailDto;
 import com.myce.payment.dto.PaymentVerifyInfo;
 import com.myce.payment.dto.PaymentVerifyResponse;

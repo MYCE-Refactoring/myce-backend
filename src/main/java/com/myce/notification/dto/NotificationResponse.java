@@ -1,7 +1,7 @@
 package com.myce.notification.dto;
 
-import com.myce.notification.entity.type.NotificationType;
-import com.myce.notification.entity.type.NotificationTargetType;
+import com.myce.notification.document.type.NotificationType;
+import com.myce.notification.document.type.NotificationTargetType;
 import lombok.Builder;
 import lombok.Getter;
 

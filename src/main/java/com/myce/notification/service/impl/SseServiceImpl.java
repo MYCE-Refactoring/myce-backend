@@ -19,7 +19,6 @@ import java.util.List;
 @Slf4j
 public class SseServiceImpl implements SseService {
     private final EmitterRepository emitterRepository;
-    private final ReservationRepository reservationRepository;
     private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 30;
 
     public SseEmitter subscribe(Long memberId) {
@@ -41,18 +40,6 @@ public class SseServiceImpl implements SseService {
 
         return sseEmitter;
     }
-
-    public void notifyToExpoClient(Long expoId, String content) {
-        List<Long> allReservationMemberId = reservationRepository
-                .findAllMemberIdByExpoIdAndStatusAndUserType(
-                        expoId, ReservationStatus.CONFIRMED, UserType.MEMBER
-                );
-        log.info("send notice to Expo Client: {}", allReservationMemberId);
-        for (Long id : allReservationMemberId) {
-            notifyMemberViaSseEmitters(id, content);
-        }
-    }
-
     public void notifyMemberViaSseEmitters(Long memberId, String content) {
         List<SseEmitter> emitters = emitterRepository
                 .findAllSseEmitterByMemberId(String.valueOf(memberId));

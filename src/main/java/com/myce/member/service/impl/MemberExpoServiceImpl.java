@@ -1,6 +1,6 @@
 package com.myce.member.service.impl;
 
-import com.myce.expo.service.ExpoLifeCycleService;
+import com.myce.expo.service.admin.ExpoLifeCycleService;
 import com.myce.member.dto.expo.*;
 import com.myce.member.service.MemberExpoService;
 import lombok.RequiredArgsConstructor;
