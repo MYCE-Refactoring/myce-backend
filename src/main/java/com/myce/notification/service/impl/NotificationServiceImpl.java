@@ -5,12 +5,13 @@ import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.notification.document.Notification;
 import com.myce.notification.dto.ExpoStatusChangeCommand;
 import com.myce.notification.dto.AdStatusChangeCommand;
-import com.myce.notification.dto.NotificationResponse;
 import com.myce.notification.document.type.NotificationType;
 import com.myce.notification.document.type.NotificationTargetType;
+import com.myce.notification.dto.NotificationResponseList;
 import com.myce.notification.repository.NotificationRepository;
 import com.myce.notification.service.NotificationService;
 import com.myce.notification.service.SseService;
+import com.myce.notification.service.mapper.NotificationMapper;
 import com.myce.system.entity.MessageTemplateSetting;
 import com.myce.system.entity.type.ChannelType;
 import com.myce.system.entity.type.MessageTemplateCode;
@@ -41,20 +42,16 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final SseService sseService;
     private final MessageTemplateSettingRepository messageTemplateSettingRepository;
+    private final NotificationMapper notificationMapper;
 
     @Override
     public void saveNotification(Long memberId, Long targetId, String title, String content, 
                                 NotificationType type, NotificationTargetType targetType) {
         try {
-            Notification notification = Notification.builder()
-                    .memberId(memberId)
-                    .type(type)
-                    .targetType(targetType)
-                    .targetId(targetId)
-                    .title(title)
-                    .content(content)
-                    .isRead(false)
-                    .build();
+
+            Notification notification = notificationMapper.toEntity(
+                    memberId, targetId, type, targetType, title, content
+            );
 
             notificationRepository.save(notification);
             
@@ -73,21 +70,16 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<NotificationResponse> getNotificationsByMemberId(
-            Long memberId,
-            Pageable pageable
+    public NotificationResponseList getNotificationsByMemberId(
+            Long memberId, int page
     ) {
-        // 알림은 서버에서 정렬 고정 (최신순)
-        Pageable fixedPageable = PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
+        Pageable Pageable = PageRequest.of(
+                page,
+                10,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
-
-        Page<Notification> page =
-                notificationRepository.findByMemberId(memberId, fixedPageable);
-
-        return page.map(this::convertToResponse);
+        Page<Notification> pages = notificationRepository.findByMemberId(memberId, Pageable);
+        return notificationMapper.toResponseList(pages);
     }
 
 
@@ -351,16 +343,4 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
 
-    private NotificationResponse convertToResponse(Notification notification) {
-        return NotificationResponse.builder()
-                .notificationId(notification.getNotificationId())
-                .type(notification.getType())
-                .targetType(notification.getTargetType())
-                .targetId(notification.getTargetId())
-                .title(notification.getTitle())
-                .content(notification.getContent())
-                .isRead(notification.getIsRead())
-                .createdAt(notification.getCreatedAt())
-                .build();
-    }
 }

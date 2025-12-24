@@ -2,6 +2,7 @@ package com.myce.notification.controller;
 
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.notification.dto.NotificationResponse;
+import com.myce.notification.dto.NotificationResponseList;
 import com.myce.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +23,16 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    public ResponseEntity<Page<NotificationResponse>> getNotifications(
+    public ResponseEntity<NotificationResponseList> getNotifications(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            Pageable pageable) {
+            @RequestParam(required = false, defaultValue = "0") int page
+    ) {
         Long memberId = customUserDetails.getMemberId();
-        Page<NotificationResponse> page =
-                notificationService.getNotificationsByMemberId(memberId, pageable);
-        return ResponseEntity.ok(page);
+        NotificationResponseList list =
+                notificationService.getNotificationsByMemberId(memberId, page);
+        return ResponseEntity.ok(list);
     }
+
 
     @PutMapping("/{notificationId}/read")
     public ResponseEntity<Void> markAsRead(
