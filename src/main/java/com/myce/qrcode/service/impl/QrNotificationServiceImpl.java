@@ -2,6 +2,7 @@ package com.myce.qrcode.service.impl;
 
 import com.myce.notification.service.NotificationService;
 import com.myce.notification.service.SupportEmailService;
+import com.myce.qrcode.dto.QrIssuedRequest;
 import com.myce.qrcode.service.QrNotificationService;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.Reserver;
@@ -9,6 +10,8 @@ import com.myce.reservation.entity.code.UserType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * QR 알림 전송 서비스 구현체
@@ -20,6 +23,7 @@ public class QrNotificationServiceImpl implements QrNotificationService {
 
     private final NotificationService notificationService;
     private final SupportEmailService supportEmailService;
+    private final RestClient notificationRestClient;
 
     @Override
     public void sendQrIssuedNotification(Reserver reserver, boolean isReissue) {
@@ -45,11 +49,22 @@ public class QrNotificationServiceImpl implements QrNotificationService {
      */
     private void sendMemberNotification(Reserver reserver, Reservation reservation,
                                         String expoTitle, boolean isReissue) {
+
         Long memberId = reservation.getUserId();
         notificationService.sendQrIssuedNotification(memberId, reservation.getId(), expoTitle, isReissue);
+
+        // WebClient로 SSE/내부 서버 호출
+        notificationRestClient.post()
+                .uri("/qr-issued")
+                .body(new QrIssuedRequest(memberId, reservation.getId(), expoTitle, isReissue))
+                .retrieve()
+                .toBodilessEntity();
+
+
         log.info("회원 QR {} 알림 처리 완료 - 예약자 ID: {}, 회원 ID: {}",
                 isReissue ? "재발급" : "발급", reserver.getId(), memberId);
     }
+
 
     /**
      * 비회원에게 이메일 알림 전송

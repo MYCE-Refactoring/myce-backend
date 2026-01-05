@@ -2,11 +2,13 @@ package com.myce.qrcode.controller;
 
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.auth.dto.type.LoginType;
+import com.myce.notification.document.Notification;
 import com.myce.qrcode.dto.QrTokenRequest;
 import com.myce.qrcode.dto.QrUseResponse;
 import com.myce.qrcode.dto.QrVerifyResponse;
 import com.myce.qrcode.service.QrCodeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClient;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,6 +27,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class QrCodeController {
 
     private final QrCodeService qrCodeService;
+    private final RestClient notificationRestClient;
+
+    @GetMapping("/call-notifications")
+    public ResponseEntity<List<Notification>> callNotificationServer() {
+
+        List<Notification> result = notificationRestClient.get()
+                .uri("")  // 엔드포인트 경로 명시
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Notification>>() {});
+
+        return ResponseEntity.ok(result == null ? List.of() : result);
+    }
+
 
     @PostMapping("/issue/{reserverId}")
     public ResponseEntity<Void> issue(@PathVariable Long reserverId) {
