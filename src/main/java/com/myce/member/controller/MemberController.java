@@ -30,6 +30,7 @@ public class MemberController {
     public ResponseEntity<Void> withdrawMember(
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         Long memberId = customUserDetails.getMemberId();
+
         memberService.withdrawMember(memberId);
         
         return ResponseEntity.noContent().build();
