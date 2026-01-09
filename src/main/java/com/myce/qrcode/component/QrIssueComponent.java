@@ -6,9 +6,12 @@ import com.myce.notification.service.NotificationService;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.UserType;
 import com.myce.reservation.repository.ReservationRepository;
+import com.myce.restclient.service.RestClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +20,7 @@ public class QrIssueComponent {
 
     private final ReservationRepository reservationRepository;
     private final NotificationService notificationService;
+    private final RestClientService restClientService;
 
     public void notifyQrIssuedByReservation(Long reservationId, boolean isReissue) {
 
@@ -27,11 +31,19 @@ public class QrIssueComponent {
             return;
         }
 
-        notificationService.sendQrIssuedNotification(
-                reservation.getUserId(),
-                reservation.getId(),
-                reservation.getExpo().getTitle(),
-                isReissue
+        Map<String, Object> body = Map.of(
+                "memberId", reservation.getUserId(),
+                "reservationId", reservation.getId(),
+                "expoTitle", reservation.getExpo().getTitle(),
+                "reissue", isReissue
         );
+
+        restClientService.send("notifications/qr-issued",body);
+//        notificationService.sendQrIssuedNotification(
+//                reservation.getUserId(),
+//                reservation.getId(),
+//                reservation.getExpo().getTitle(),
+//                isReissue
+//        );
     }
 }

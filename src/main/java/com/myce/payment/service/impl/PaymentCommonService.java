@@ -8,6 +8,8 @@ import com.myce.notification.service.NotificationService;
 import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.dto.ReserverBulkSaveRequest;
 import com.myce.reservation.entity.Reservation;
+import com.myce.restclient.dto.PaymentCompleteRequest;
+import com.myce.restclient.service.RestClientService;
 import com.myce.system.dto.message.MessageTemplate;
 import com.myce.system.service.message.GenerateMessageService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class PaymentCommonService {
     private final NotificationService notificationService;
     private final EmailSendService emailSendService;
     private final GenerateMessageService generateMessageService;
+    private final RestClientService restClientService;
 
     // 마일리지 처리
     public void processMileage(int usedMileage, int savedMileage, long userId)  {
@@ -61,7 +64,15 @@ public class PaymentCommonService {
 
         try {
             String payAmountMessage = PAY_AMOUNT_MESSAGE_FORMAT.formatted(paidAmount);
-            notificationService.sendPaymentCompleteNotification(userId, reservationId, expoTitle, payAmountMessage);
+            PaymentCompleteRequest req = PaymentCompleteRequest.builder()
+                    .userId(userId)
+                    .reservationId(reservationId)
+                    .expoTitle(expoTitle)
+                    .payAmountMessage(payAmountMessage)
+                    .build();
+
+            restClientService.send("notifications/payment-completed", req);
+//            notificationService.sendPaymentCompleteNotification(userId, reservationId, expoTitle, payAmountMessage);
             log.info("가상계좌 결제 완료 알림 발송 - 예약 ID: {}, 회원 ID: {}, 금액: {}",
                                                         reservationId, userId, payAmountMessage);
         } catch (Exception e) {

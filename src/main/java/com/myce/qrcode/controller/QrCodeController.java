@@ -2,7 +2,6 @@ package com.myce.qrcode.controller;
 
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.auth.dto.type.LoginType;
-import com.myce.notification.document.Notification;
 import com.myce.qrcode.dto.QrTokenRequest;
 import com.myce.qrcode.dto.QrUseResponse;
 import com.myce.qrcode.dto.QrVerifyResponse;

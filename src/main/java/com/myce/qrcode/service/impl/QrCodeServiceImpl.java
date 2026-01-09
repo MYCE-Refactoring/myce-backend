@@ -20,6 +20,7 @@ import com.myce.reservation.entity.Reserver;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.UserType;
 import com.myce.reservation.repository.ReserverRepository;
+import com.myce.restclient.service.RestClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +39,9 @@ public class QrCodeServiceImpl implements QrCodeService {
     private final ReserverRepository reserverRepository;
     private final AdminCodeRepository adminCodeRepository;
     private final QrResponseMapper qrResponseMapper;
-    private final NotificationService notificationService;
     private final QrCodeGenerateService qrCodeGenerateService;
     private final QrNotificationService qrNotificationService;
+    private final RestClientService restClientService;
 
     @Override
     @Transactional
@@ -283,7 +285,17 @@ public class QrCodeServiceImpl implements QrCodeService {
                 try {
                     Long memberId = reservation.getUserId();
                     String expoTitle = reservation.getExpo().getTitle();
-                    notificationService.sendQrIssuedNotification(memberId, reservation.getId(), expoTitle, false);
+
+                    Map<String, Object> body = Map.of(
+                            "memberId", memberId,
+                            "reservationId", reservationId,
+                            "expoTitle", expoTitle,
+                            "reissue", false
+                    );
+
+                    restClientService.send("notifications/qr-issued",body);
+
+//                    notificationService.sendQrIssuedNotification(memberId, reservation.getId(), expoTitle, false);
                     log.info("QR 발급 알림 처리 완료 - 예약 ID: {}, 회원 ID: {}", reservationId, memberId);
                 } catch (Exception e) {
                     log.error("QR 발급 알림 처리 실패 - 예약 ID: {}, 오류: {}", reservationId, e.getMessage(), e);
