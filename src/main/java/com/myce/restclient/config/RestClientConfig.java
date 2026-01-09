@@ -1,4 +1,4 @@
-package com.myce.common.config;
+package com.myce.restclient.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,9 +8,9 @@ import org.springframework.web.client.RestClient;
 public class RestClientConfig {
 
     @Bean
-    public RestClient notificationRestClient() {
+    public RestClient RestClientTemplate() {
         return RestClient.builder()
-                .baseUrl("http://localhost:8083/internal/notifications")
+                .baseUrl("http://localhost:8083/internal")
                 .build();
     }
 }

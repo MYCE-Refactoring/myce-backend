@@ -7,6 +7,7 @@ import com.myce.qrcode.dto.QrTokenRequest;
 import com.myce.qrcode.dto.QrUseResponse;
 import com.myce.qrcode.dto.QrVerifyResponse;
 import com.myce.qrcode.service.QrCodeService;
+import com.myce.restclient.service.RestClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,17 +29,21 @@ import java.util.List;
 public class QrCodeController {
 
     private final QrCodeService qrCodeService;
-    private final RestClient notificationRestClient;
+    private final RestClientService restClientService;
 
-    @GetMapping("/call-notifications")
-    public ResponseEntity<List<Notification>> callNotificationServer() {
 
-        List<Notification> result = notificationRestClient.get()
-                .uri("")  // 엔드포인트 경로 명시
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<Notification>>() {});
+    @PostMapping("/qr-issued")
+    public void callNotificationServer() {
 
-        return ResponseEntity.ok(result == null ? List.of() : result);
+        Map<String, Object> body = Map.of(
+                "memberId", 1L,
+                "reservationId", 200L,
+                "expoTitle", "테스트 박람회",
+                "reissue", false
+        );
+
+        restClientService.send("/notifications/qr-issued", body);
+
     }
 
 

@@ -266,6 +266,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendAdvertisementStatusChangeNotification(AdStatusChangeCommand command) {
         try {
+
             MessageTemplateSetting template =
                     messageTemplateSettingRepository.findByCodeAndChannelType(
                             MessageTemplateCode.AD_STATUS_CHANGE,
