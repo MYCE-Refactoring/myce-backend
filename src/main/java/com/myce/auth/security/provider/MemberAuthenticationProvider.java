@@ -3,6 +3,10 @@ package com.myce.auth.security.provider;
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.auth.dto.type.LoginType;
 import com.myce.auth.security.CustomAuthenticationToken;
+import com.myce.common.exception.CustomErrorCode;
+import com.myce.common.exception.CustomException;
+import com.myce.member.entity.Member;
+import com.myce.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,8 +20,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MemberAuthenticationProvider implements AuthenticationProvider {
 
-    private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final MemberRepository memberRepository;
+    private final UserDetailsService userDetailsService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -30,12 +35,14 @@ public class MemberAuthenticationProvider implements AuthenticationProvider {
 
         String loginId = token.getName();
         String password = token.getCredentials().toString();
+        Member member = memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException(CustomErrorCode.MEMBER_NOT_EXIST));
 
-        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(loginId);
-        if (!passwordEncoder.matches(password, userDetails.getPassword())) {
+        if (!passwordEncoder.matches(password, member.getPassword())) {
             throw new BadCredentialsException("Invalid password for member.");
         }
 
+        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(loginId);
         return new CustomAuthenticationToken(userDetails, null, userDetails.getAuthorities(), LoginType.MEMBER);
     }
 

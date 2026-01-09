@@ -66,8 +66,7 @@ public class SecurityConfig {
                 (jwtUtil, tokenCookieProvider, authenticationManager(), refreshTokenRepository);
         loginFilter.setFilterProcessesUrl("/api/auth/login");
 
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter
-                (jwtUtil, userDetailsService, adminCodeDetailService, tokenBlackListRepository);
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter();
 
         CustomLogoutFilter logoutFilter = new CustomLogoutFilter
                 (jwtUtil, refreshTokenRepository, tokenBlackListRepository, tokenCookieProvider);

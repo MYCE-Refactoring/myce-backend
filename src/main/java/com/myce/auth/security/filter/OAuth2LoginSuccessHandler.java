@@ -63,8 +63,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             String loginId = member.getLoginId();
             String role = member.getRole().name();
 
-            String accessToken = jwtUtil.createToken(JwtUtil.ACCESS_TOKEN, loginType, memberId, loginId, role);
-            String refreshToken = jwtUtil.createToken(JwtUtil.REFRESH_TOKEN, loginType, memberId, loginId, role);
+            String accessToken = jwtUtil.createToken(JwtUtil.ACCESS_TOKEN, loginType, memberId, role);
+            String refreshToken = jwtUtil.createToken(JwtUtil.REFRESH_TOKEN, loginType, memberId, role);
 
             refreshTokenRepository.save(loginType, memberId, refreshToken, jwtUtil.getRefreshTokenTime());
 
