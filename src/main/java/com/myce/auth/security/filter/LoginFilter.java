@@ -57,11 +57,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String loginType = userDetails.getLoginType().name();
         Long memberId = userDetails.getMemberId();
-        String loginId = userDetails.getLoginId();
         String role = userDetails.getRole();
 
-        String accessToken = jwtUtil.createToken(JwtUtil.ACCESS_TOKEN, loginType, memberId, loginId, role);
-        String refreshToken = jwtUtil.createToken(JwtUtil.REFRESH_TOKEN, loginType, memberId, loginId, role);
+        String accessToken = jwtUtil.createToken(JwtUtil.ACCESS_TOKEN, loginType, memberId, role);
+        String refreshToken = jwtUtil.createToken(JwtUtil.REFRESH_TOKEN, loginType, memberId, role);
 
         refreshTokenRepository.save(loginType, memberId, refreshToken, jwtUtil.getRefreshTokenTime());
 
@@ -69,7 +68,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         ResponseCookie cookie = tokenCookieProvider.getCookie(JwtUtil.REFRESH_TOKEN, refreshToken);
         response.addHeader("Set-Cookie", cookie.toString());
         response.setStatus(HttpServletResponse.SC_OK);
-        log.info("[LoginFilter] Successfully login. loginId: {}", loginId);
+        log.info("[LoginFilter] Successfully login. memberId: {}", memberId);
     }
 
     @Override
