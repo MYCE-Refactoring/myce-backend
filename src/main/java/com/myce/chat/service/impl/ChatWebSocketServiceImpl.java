@@ -1,5 +1,6 @@
 package com.myce.chat.service.impl;
 
+import com.myce.auth.dto.type.LoginType;
 import com.myce.auth.security.util.JwtUtil;
 import com.myce.chat.document.ChatMessage;
 import com.myce.chat.document.ChatRoom;
@@ -57,7 +58,7 @@ public class ChatWebSocketServiceImpl implements ChatWebSocketService {
             }
 
             Long userId = jwtUtil.getMemberIdFromToken(token);
-            String loginType = jwtUtil.getLoginTypeFromToken(token);
+            LoginType loginType = jwtUtil.getLoginTypeFromToken(token);
             
             if ("ADMIN_CODE".equals(loginType)) {
                 adminCodeRepository.findById(userId)
@@ -88,7 +89,7 @@ public class ChatWebSocketServiceImpl implements ChatWebSocketService {
             Long roomMemberId = Long.parseLong(parts[1]);
             
             // 권한 확인: 본인의 플랫폼 방이거나 플랫폼 관리자
-            String loginType = jwtUtil.getLoginTypeFromToken(token);
+            LoginType loginType = jwtUtil.getLoginTypeFromToken(token);
             Member user = memberRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.MEMBER_NOT_EXIST));
             
@@ -108,7 +109,7 @@ public class ChatWebSocketServiceImpl implements ChatWebSocketService {
         Long expoId = Long.parseLong(parts[1]);
         Long participantId = Long.parseLong(parts[2]);
         
-        String loginType = jwtUtil.getLoginTypeFromToken(token);
+        LoginType loginType = jwtUtil.getLoginTypeFromToken(token);
         
         if ("ADMIN_CODE".equals(loginType)) {
             AdminCode adminCode = adminCodeRepository.findById(userId)
@@ -168,7 +169,7 @@ public class ChatWebSocketServiceImpl implements ChatWebSocketService {
             Long expoId = Long.parseLong(parts[1]);
             
             // Use token to determine login type - same as joinRoom logic
-            String loginType = jwtUtil.getLoginTypeFromToken(token);
+            LoginType loginType = jwtUtil.getLoginTypeFromToken(token);
             
             if ("ADMIN_CODE".equals(loginType)) {
                 // This is an AdminCode user
