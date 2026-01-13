@@ -3,31 +3,24 @@ package com.myce.auth.security.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.auth.dto.type.LoginType;
-import com.myce.auth.security.config.SecurityEndpoints;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String INVALID_TOKEN_CODE = "INVALID_TOKEN";
-
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
+    private final String INTERNAL_AUTH_VALUE;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -35,8 +28,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String method = request.getMethod();
         log.debug("[JwtAuthenticationFilter] Input uri={}, method={}", uri, method);
-        if (isPermitAll(method, uri)) {
-            filterChain.doFilter(request, response);
+
+        String authValue = request.getHeader(InternalHeaderKey.INTERNAL_AUTH);
+        if (authValue == null || !authValue.equals(INTERNAL_AUTH_VALUE)) {
+            log.info("Not exist auth value. authValue={}", authValue);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
@@ -46,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (role == null || loginTypeStr == null || memberIdStr == null) {
             log.info("Not exist user info. role={}, loginType={}, memberId={}", role, loginTypeStr, memberIdStr);
-            setErrorResponse(response, INVALID_TOKEN_CODE);
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -87,28 +83,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Map<String, String> body = Map.of("code", code);
         log.info("[JwtAuthenticationFilter] Set error response: {}", body);
         new ObjectMapper().writeValue(response.getWriter(), body);
-    }
-
-    private boolean isPermitAll(String method, String path) {
-        if(isExist(SecurityEndpoints.ETC_PERMIT_ALL, path)) return true;
-
-        if(HttpMethod.GET.name().equals(method)) {
-            return isExist(SecurityEndpoints.GET_PERMIT_ALL, path);
-        }
-        if(HttpMethod.POST.name().equals(method)) {
-            return isExist(SecurityEndpoints.POST_PERMIT_ALL, path);
-        }
-        if(HttpMethod.PATCH.name().equals(method)) {
-            return isExist(SecurityEndpoints.PATCH_PERMIT_ALL, path);
-        }
-        if(HttpMethod.DELETE.name().equals(method)) {
-            return isExist(SecurityEndpoints.DELETE_PERMIT_ALL, path);
-        }
-
-        return false;
-    }
-
-    private boolean isExist(String[] patterns, String path) {
-        return Arrays.stream(patterns).anyMatch(p -> pathMatcher.match(p, path));
     }
 }

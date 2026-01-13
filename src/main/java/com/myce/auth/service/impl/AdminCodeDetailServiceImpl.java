@@ -35,7 +35,6 @@ public class AdminCodeDetailServiceImpl implements AdminCodeDetailService {
 
         return CustomUserDetails.builder()
                 .memberId(adminCode.getId())
-                .loginId(code)
                 .loginType(LoginType.ADMIN_CODE)
                 .role(Role.EXPO_ADMIN.name())
                 .build();
@@ -48,7 +47,6 @@ public class AdminCodeDetailServiceImpl implements AdminCodeDetailService {
 
         return CustomUserDetails.builder()
                 .memberId(adminCode.getId())
-                .loginId(code)
                 .loginType(LoginType.ADMIN_CODE)
                 .role(Role.EXPO_ADMIN.name())
                 .build();
