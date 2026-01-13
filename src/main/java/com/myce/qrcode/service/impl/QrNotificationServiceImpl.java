@@ -63,9 +63,6 @@ public class QrNotificationServiceImpl implements QrNotificationService {
         restClientService.send("/notifications/qr-issued", body);
 
 
-//        notificationService.sendQrIssuedNotification(memberId, reservation.getId(), expoTitle, isReissue);
-
-
         log.info("회원 QR {} 알림 처리 완료 - 예약자 ID: {}, 회원 ID: {}",
                 isReissue ? "재발급" : "발급", reserver.getId(), memberId);
     }

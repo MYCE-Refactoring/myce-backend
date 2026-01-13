@@ -2,6 +2,10 @@ server:
   port: 8081
   forward-headers-strategy: native
 
+internal:
+  auth:
+    value: local-gateway
+
 logging:
   level:
     root: info
