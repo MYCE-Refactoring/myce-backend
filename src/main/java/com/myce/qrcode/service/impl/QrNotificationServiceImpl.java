@@ -1,6 +1,5 @@
 package com.myce.qrcode.service.impl;
 
-import com.myce.notification.service.NotificationService;
 import com.myce.notification.service.SupportEmailService;
 import com.myce.qrcode.dto.QrIssuedRequest;
 import com.myce.qrcode.service.QrNotificationService;
@@ -24,7 +23,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class QrNotificationServiceImpl implements QrNotificationService {
 
-    private final NotificationService notificationService;
     private final SupportEmailService supportEmailService;
     private final RestClientService restClientService;
 

@@ -2,10 +2,8 @@ package com.myce.payment.service.refund.impl;
 
 import com.myce.advertisement.repository.AdRepository;
 import com.myce.advertisement.service.component.AdNotificationComponent;
-import com.myce.common.entity.type.TargetType;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
-import com.myce.notification.service.NotificationService;
 import com.myce.payment.dto.PaymentImpUidForRefundRequest;
 import com.myce.payment.dto.PaymentInfoForRefund;
 import com.myce.payment.dto.PaymentRefundRequest;

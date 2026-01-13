@@ -11,7 +11,6 @@ import com.myce.advertisement.repository.AdRepository;
 import com.myce.advertisement.service.SystemAdService;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
-import com.myce.notification.service.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

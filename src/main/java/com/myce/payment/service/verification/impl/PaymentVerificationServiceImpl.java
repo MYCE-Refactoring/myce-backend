@@ -5,7 +5,6 @@ import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.member.service.MemberAdService;
 import com.myce.member.service.MemberExpoService;
-import com.myce.notification.service.NotificationService;
 import com.myce.payment.dto.PaymentInfoDetailDto;
 import com.myce.payment.dto.PaymentVerifyInfo;
 import com.myce.payment.dto.PaymentVerifyResponse;

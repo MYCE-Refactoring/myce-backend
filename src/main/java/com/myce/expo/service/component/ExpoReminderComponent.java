@@ -1,7 +1,6 @@
 package com.myce.expo.service.component;
 
 import com.myce.expo.entity.Expo;
-import com.myce.notification.service.NotificationService;
 import com.myce.reservation.repository.ReservationRepository;
 import com.myce.restclient.service.RestClientService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +15,6 @@ import java.util.Map;
 public class ExpoReminderComponent {
 
     private final ReservationRepository reservationRepository;
-    private final NotificationService notificationService;
     private final RestClientService restclientService;
 
     @Transactional(readOnly = true)

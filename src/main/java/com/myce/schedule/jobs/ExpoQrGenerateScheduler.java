@@ -3,7 +3,6 @@ package com.myce.schedule.jobs;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
-import com.myce.notification.service.NotificationService;
 import com.myce.qrcode.component.QrIssueComponent;
 import com.myce.qrcode.repository.QrCodeRepository;
 import com.myce.qrcode.service.QrCodeService;

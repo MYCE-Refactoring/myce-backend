@@ -22,7 +22,6 @@ import com.myce.payment.repository.PaymentRepository;
 import com.myce.payment.repository.RefundRepository;
 import com.myce.system.entity.AdFeeSetting;
 import com.myce.system.repository.AdFeeSettingRepository;
-import com.myce.notification.service.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +39,6 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
     private final PaymentRepository paymentRepository;
     private final RefundRepository refundRepository;
     private final AdFeeSettingRepository adFeeSettingRepository;
-    private final NotificationService notificationService;
-
     private final AdNotificationComponent adNotificationComponent;
 
     public AdPaymentInfoCheck generatePaymentCheck(Long adId) {

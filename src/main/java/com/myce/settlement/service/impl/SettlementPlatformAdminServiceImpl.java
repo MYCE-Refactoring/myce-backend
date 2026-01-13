@@ -8,7 +8,6 @@ import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.service.component.ExpoNotificationComponent;
 import com.myce.member.entity.Member;
 import com.myce.member.repository.MemberRepository;
-import com.myce.notification.service.NotificationService;
 import com.myce.settlement.entity.Settlement;
 import com.myce.settlement.repository.SettlementRepository;
 import com.myce.settlement.service.SettlementPlatformAdminService;

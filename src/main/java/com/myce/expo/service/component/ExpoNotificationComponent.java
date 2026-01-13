@@ -3,7 +3,6 @@ package com.myce.expo.service.component;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.notification.dto.ExpoStatusChangeCommand;
-import com.myce.notification.service.NotificationService;
 import com.myce.restclient.service.RestClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ExpoNotificationComponent {
 
-    private final NotificationService notificationService;
     private final RestClientService restClientService;
 
     public void notifyExpoStatusChange(Expo expo, ExpoStatus oldStatus, ExpoStatus newStatus) {

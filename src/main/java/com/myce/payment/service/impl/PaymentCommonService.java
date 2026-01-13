@@ -4,7 +4,6 @@ import com.myce.member.dto.MileageUpdateRequest;
 import com.myce.member.service.MemberGradeService;
 import com.myce.member.service.MemberMileageService;
 import com.myce.notification.service.EmailSendService;
-import com.myce.notification.service.NotificationService;
 import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.dto.ReserverBulkSaveRequest;
 import com.myce.reservation.entity.Reservation;
@@ -26,7 +25,6 @@ public class PaymentCommonService {
     private final MemberMileageService memberMileageService;
     private final MemberGradeService memberGradeService;
     private final QrCodeService qrCodeService;
-    private final NotificationService notificationService;
     private final EmailSendService emailSendService;
     private final GenerateMessageService generateMessageService;
     private final RestClientService restClientService;

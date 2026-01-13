@@ -2,7 +2,6 @@ package com.myce.schedule.jobs;
 
 import com.myce.expo.entity.Expo;
 import com.myce.expo.service.component.EventReminderComponent;
-import com.myce.notification.service.NotificationService;
 import com.myce.expo.entity.Event;
 import com.myce.expo.repository.EventRepository;
 import com.myce.reservation.repository.ReservationRepository;

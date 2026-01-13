@@ -6,7 +6,6 @@ import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.service.component.ExpoReminderComponent;
-import com.myce.notification.service.NotificationService;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
