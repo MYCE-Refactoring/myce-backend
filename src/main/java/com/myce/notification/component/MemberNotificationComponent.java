@@ -8,18 +8,21 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class QrIssueComponent {
+public class MemberNotificationComponent {
 
     private final NotificationClientService notificationClientService;
 
-    public void notifyQrIssuedByReservation(Long memberId, Long reservationId, String expoTitle, boolean isReissue) {
-
+    public void sendMemberNotification(Long memberId, Long reservationId,
+                                       String expoTitle, boolean isReissue) {
         Map<String, Object> body = Map.of(
                 "memberId", memberId,
                 "reservationId", reservationId,
                 "expoTitle", expoTitle,
                 "reissue", isReissue
         );
-        notificationClientService.send("notifications/qr-issued",body);
+
+        notificationClientService.send("/notifications/qr-issued", body);
+
     }
+
 }

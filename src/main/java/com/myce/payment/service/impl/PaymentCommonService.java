@@ -3,6 +3,7 @@ package com.myce.payment.service.impl;
 import com.myce.member.dto.MileageUpdateRequest;
 import com.myce.member.service.MemberGradeService;
 import com.myce.member.service.MemberMileageService;
+import com.myce.notification.component.PaymentCompleteComponent;
 import com.myce.notification.service.EmailSendService;
 import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.dto.ReserverBulkSaveRequest;
@@ -27,7 +28,7 @@ public class PaymentCommonService {
     private final QrCodeService qrCodeService;
     private final EmailSendService emailSendService;
     private final GenerateMessageService generateMessageService;
-    private final NotificationClientService notificationClientService;
+    private final PaymentCompleteComponent paymentCompleteComponent;
 
     // 마일리지 처리
     public void processMileage(int usedMileage, int savedMileage, long userId)  {
@@ -70,7 +71,8 @@ public class PaymentCommonService {
                     .payAmountMessage(payAmountMessage)
                     .build();
 
-            notificationClientService.send("notifications/payment-completed", req);
+            paymentCompleteComponent.sendPaymentComplete(req);
+
             log.info("가상계좌 결제 완료 알림 발송 - 예약 ID: {}, 회원 ID: {}, 금액: {}",
                                                         reservationId, userId, payAmountMessage);
         } catch (Exception e) {

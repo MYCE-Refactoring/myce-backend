@@ -1,5 +1,6 @@
 package com.myce.qrcode.service.impl;
 
+import com.myce.notification.component.MemberNotificationComponent;
 import com.myce.notification.service.SupportEmailService;
 import com.myce.qrcode.service.QrNotificationService;
 import com.myce.reservation.entity.Reservation;
@@ -21,7 +22,7 @@ import java.util.Map;
 public class QrNotificationServiceImpl implements QrNotificationService {
 
     private final SupportEmailService supportEmailService;
-    private final NotificationClientService notificationClientService;
+    private final MemberNotificationComponent memberNotificationComponent;
 
     @Override
     public void sendQrIssuedNotification(Reserver reserver, boolean isReissue) {
@@ -29,9 +30,12 @@ public class QrNotificationServiceImpl implements QrNotificationService {
             Reservation reservation = reserver.getReservation();
             String expoTitle = reservation.getExpo().getTitle();
 
+            Long reservationId = reservation.getId();
+            Long memberId = reservation.getUserId();
+
             if (reservation.getUserType() == UserType.MEMBER) {
                 // 회원: 사이트 내 알림 + SSE 전송
-                sendMemberNotification(reserver, reservation, expoTitle, isReissue);
+                memberNotificationComponent.sendMemberNotification(memberId, reservationId, expoTitle, isReissue);
             } else {
                 // 비회원: 이메일 알림
                 sendGuestEmailNotification(reserver, reservation, expoTitle, isReissue);
@@ -42,27 +46,8 @@ public class QrNotificationServiceImpl implements QrNotificationService {
         }
     }
 
-    /**
-     * 회원에게 사이트 내 알림 + SSE 전송
-     */
-    private void sendMemberNotification(Reserver reserver, Reservation reservation,
-                                        String expoTitle, boolean isReissue) {
-
-        Long memberId = reservation.getUserId();
-
-        Map<String, Object> body = Map.of(
-                "memberId", memberId,
-                "reservationId", reservation.getId(),
-                "expoTitle", reservation.getExpo().getTitle(),
-                "reissue", isReissue
-        );
-
-        notificationClientService.send("/notifications/qr-issued", body);
 
 
-        log.info("회원 QR {} 알림 처리 완료 - 예약자 ID: {}, 회원 ID: {}",
-                isReissue ? "재발급" : "발급", reserver.getId(), memberId);
-    }
 
 
     /**

@@ -6,6 +6,7 @@ import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.AdminCode;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.repository.AdminCodeRepository;
+import com.myce.notification.component.QrIssueNotifyComponent;
 import com.myce.qrcode.dto.QrUseResponse;
 import com.myce.qrcode.dto.QrVerifyResponse;
 import com.myce.qrcode.entity.QrCode;
@@ -41,6 +42,8 @@ public class QrCodeServiceImpl implements QrCodeService {
     private final QrCodeGenerateService qrCodeGenerateService;
     private final QrNotificationService qrNotificationService;
     private final NotificationClientService notificationClientService;
+
+    private final QrIssueNotifyComponent qrIssueNotifyComponent;
 
     @Override
     @Transactional
@@ -285,16 +288,8 @@ public class QrCodeServiceImpl implements QrCodeService {
                     Long memberId = reservation.getUserId();
                     String expoTitle = reservation.getExpo().getTitle();
 
-                    Map<String, Object> body = Map.of(
-                            "memberId", memberId,
-                            "reservationId", reservationId,
-                            "expoTitle", expoTitle,
-                            "reissue", false
-                    );
+                    qrIssueNotifyComponent.sendQrIssuedNotification(memberId, reservationId, expoTitle);
 
-                    notificationClientService.send("notifications/qr-issued",body);
-
-//                    notificationService.sendQrIssuedNotification(memberId, reservation.getId(), expoTitle, false);
                     log.info("QR 발급 알림 처리 완료 - 예약 ID: {}, 회원 ID: {}", reservationId, memberId);
                 } catch (Exception e) {
                     log.error("QR 발급 알림 처리 실패 - 예약 ID: {}, 오류: {}", reservationId, e.getMessage(), e);

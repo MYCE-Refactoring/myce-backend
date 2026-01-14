@@ -18,4 +18,11 @@ public class NotificationClientService {
                 .toBodilessEntity();
     }
 
+    public <T> T receive(String path, Class<T> responseType) {
+        return notificationClient.get()
+                .uri(path)
+                .retrieve()
+                .body(responseType);
+    }
+
 }

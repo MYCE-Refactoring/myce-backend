@@ -1,12 +1,15 @@
 package com.myce.schedule.jobs;
 
+import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.notification.component.QrIssueComponent;
 import com.myce.qrcode.repository.QrCodeRepository;
 import com.myce.qrcode.service.QrCodeService;
+import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.Reserver;
+import com.myce.reservation.repository.ReservationRepository;
 import com.myce.reservation.repository.ReserverRepository;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
@@ -20,6 +23,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import static com.myce.common.exception.CustomErrorCode.RESERVATION_NOT_FOUND;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -27,6 +32,7 @@ public class ExpoQrGenerateScheduler implements TaskScheduler {
 
     private final ExpoRepository expoRepository;
     private final ReserverRepository reserverRepository;
+    private final ReservationRepository reservationRepository;
     private final QrCodeService qrCodeService;
     private final QrCodeRepository qrCodeRepository;
 
@@ -111,7 +117,13 @@ public class ExpoQrGenerateScheduler implements TaskScheduler {
         // 2단계: QR 생성이 성공한 예약들에 대해 알림 전송
         int notificationCount = 0;
         for (Long reservationId : processedReservations) {
-            qrIssueComponent.notifyQrIssuedByReservation(reservationId, false);
+            Reservation reservation = reservationRepository.findById(reservationId)
+                    .orElseThrow(() -> new CustomException(RESERVATION_NOT_FOUND));
+
+            Long memberId = reservation.getUserId();
+            String expoTitle = reservation.getExpo().getTitle();
+
+            qrIssueComponent.notifyQrIssuedByReservation(memberId, reservationId, expoTitle,false);
             notificationCount++;
         }
 

@@ -1,7 +1,5 @@
 package com.myce.notification.component;
 
-import com.myce.expo.entity.Expo;
-import com.myce.reservation.repository.ReservationRepository;
 import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,13 +11,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ExpoReminderComponent {
 
-    private final ReservationRepository reservationRepository;
-    private final NotificationClientService restclient;
+    private final NotificationClientService notificationClientService;
 
-    public void notifyExpoStart(Expo expo) {
-
-        List<Long> userIds =
-                reservationRepository.findDistinctUserIdsByExpoId(expo.getId());
+    public void notifyExpoStart(List<Long> userIds, Long expoId, String expoTitle) {
 
         if (userIds.isEmpty()) {
             return;
@@ -27,11 +21,11 @@ public class ExpoReminderComponent {
 
         Map<String, Object> body = Map.of(
                 "memberIds", userIds,
-                "expoId", expo.getId(),
-                "expoTitle", expo.getTitle()
+                "expoId", expoId,
+                "expoTitle", expoTitle
         );
 
-        restclient.send("notifications/event-reminder", body);
+        notificationClientService.send("notifications/event-reminder", body);
 
     }
 }
