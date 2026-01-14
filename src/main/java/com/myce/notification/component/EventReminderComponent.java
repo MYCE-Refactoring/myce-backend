@@ -1,6 +1,6 @@
-package com.myce.expo.service.component;
+package com.myce.notification.component;
 
-import com.myce.restclient.service.RestClientService;
+import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +12,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EventReminderComponent {
 
-    private final RestClientService restclientService;
+    private final NotificationClientService restclient;
 
     public void notifyEventHourReminder(
             List<Long> memberIds,
@@ -30,6 +30,6 @@ public class EventReminderComponent {
                 "startTime", startTime
         );
 
-        restclientService.send("notifications/event-reminder",body);
+        restclient.send("notifications/event-reminder",body);
     }
 }

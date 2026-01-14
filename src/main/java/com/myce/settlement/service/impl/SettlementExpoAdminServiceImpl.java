@@ -7,7 +7,7 @@ import com.myce.expo.entity.Ticket;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
-import com.myce.expo.service.component.ExpoNotificationComponent;
+import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.member.dto.expo.ExpoSettlementReceiptResponse;
 import com.myce.member.dto.expo.ExpoSettlementRequest;
 import com.myce.member.mapper.expo.ExpoSettlementReceiptMapper;

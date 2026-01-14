@@ -1,11 +1,10 @@
-package com.myce.expo.service.component;
+package com.myce.notification.component;
 
 import com.myce.expo.entity.Expo;
 import com.myce.reservation.repository.ReservationRepository;
-import com.myce.restclient.service.RestClientService;
+import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -15,9 +14,8 @@ import java.util.Map;
 public class ExpoReminderComponent {
 
     private final ReservationRepository reservationRepository;
-    private final RestClientService restclientService;
+    private final NotificationClientService restclient;
 
-    @Transactional(readOnly = true)
     public void notifyExpoStart(Expo expo) {
 
         List<Long> userIds =
@@ -33,7 +31,7 @@ public class ExpoReminderComponent {
                 "expoTitle", expo.getTitle()
         );
 
-        restclientService.send("notifications/event-reminder", body);
+        restclient.send("notifications/event-reminder", body);
 
     }
 }

@@ -1,14 +1,12 @@
 package com.myce.qrcode.controller;
 
 import com.myce.auth.dto.CustomUserDetails;
-import com.myce.auth.dto.type.LoginType;
 import com.myce.qrcode.dto.QrTokenRequest;
 import com.myce.qrcode.dto.QrUseResponse;
 import com.myce.qrcode.dto.QrVerifyResponse;
 import com.myce.qrcode.service.QrCodeService;
-import com.myce.restclient.service.RestClientService;
+import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,10 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestClient;
-import java.util.List;
+
 import java.util.Map;
 
 @RestController
@@ -28,7 +24,7 @@ import java.util.Map;
 public class QrCodeController {
 
     private final QrCodeService qrCodeService;
-    private final RestClientService restClientService;
+    private final NotificationClientService notificationClientService;
 
 
     @PostMapping("/qr-issued")
@@ -41,7 +37,7 @@ public class QrCodeController {
                 "reissue", false
         );
 
-        restClientService.send("/notifications/qr-issued", body);
+        notificationClientService.send("/notifications/qr-issued", body);
 
     }
 

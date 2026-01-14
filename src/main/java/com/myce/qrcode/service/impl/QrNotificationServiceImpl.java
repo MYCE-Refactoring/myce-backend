@@ -1,17 +1,14 @@
 package com.myce.qrcode.service.impl;
 
 import com.myce.notification.service.SupportEmailService;
-import com.myce.qrcode.dto.QrIssuedRequest;
 import com.myce.qrcode.service.QrNotificationService;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.Reserver;
 import com.myce.reservation.entity.code.UserType;
-import com.myce.restclient.service.RestClientService;
+import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
 
@@ -24,7 +21,7 @@ import java.util.Map;
 public class QrNotificationServiceImpl implements QrNotificationService {
 
     private final SupportEmailService supportEmailService;
-    private final RestClientService restClientService;
+    private final NotificationClientService notificationClientService;
 
     @Override
     public void sendQrIssuedNotification(Reserver reserver, boolean isReissue) {
@@ -60,7 +57,7 @@ public class QrNotificationServiceImpl implements QrNotificationService {
                 "reissue", isReissue
         );
 
-        restClientService.send("/notifications/qr-issued", body);
+        notificationClientService.send("/notifications/qr-issued", body);
 
 
         log.info("회원 QR {} 알림 처리 완료 - 예약자 ID: {}, 회원 ID: {}",

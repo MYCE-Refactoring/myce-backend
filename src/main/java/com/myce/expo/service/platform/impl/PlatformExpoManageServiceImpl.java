@@ -11,7 +11,7 @@ import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.service.platform.PlatformExpoManageService;
-import com.myce.expo.service.component.ExpoNotificationComponent;
+import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.expo.service.platform.mapper.RejectInfoMapper;
 import com.myce.payment.entity.ExpoPaymentInfo;
 import com.myce.payment.entity.Payment;

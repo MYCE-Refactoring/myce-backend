@@ -6,6 +6,12 @@ internal:
   auth:
     value: local-gateway
 
+external:
+  base-url:
+    notification: http://localhost:8013/internal
+    payment: http://localhost:8023/internal
+    chat: http://localhost:8033/internal
+
 logging:
   level:
     root: info

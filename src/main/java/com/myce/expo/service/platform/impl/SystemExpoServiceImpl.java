@@ -6,7 +6,7 @@ import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.service.platform.SystemExpoService;
-import com.myce.expo.service.component.ExpoNotificationComponent;
+import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.settlement.service.SettlementSystemService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

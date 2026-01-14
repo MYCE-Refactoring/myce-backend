@@ -1,25 +1,21 @@
 package com.myce.restclient.service;
 
-import com.myce.restclient.config.RestClientConfig;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
-public class RestClientServiceImpl implements RestClientService{
+public class NotificationClientService {
 
-    private final RestClient restClient;
+    private final RestClient notificationClient;
 
-    @Override
     public <T> void send(String path, T body) {
-        restClient.post()
+        notificationClient.post()
                 .uri(path)
                 .body(body)
                 .retrieve()
                 .toBodilessEntity();
     }
+
 }

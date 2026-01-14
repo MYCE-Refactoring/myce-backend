@@ -5,7 +5,7 @@ import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
-import com.myce.expo.service.component.ExpoNotificationComponent;
+import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.member.entity.Member;
 import com.myce.member.repository.MemberRepository;
 import com.myce.settlement.entity.Settlement;

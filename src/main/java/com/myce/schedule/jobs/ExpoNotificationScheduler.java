@@ -1,11 +1,9 @@
 package com.myce.schedule.jobs;
 
-import com.myce.common.exception.CustomErrorCode;
-import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
-import com.myce.expo.service.component.ExpoReminderComponent;
+import com.myce.notification.component.ExpoReminderComponent;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

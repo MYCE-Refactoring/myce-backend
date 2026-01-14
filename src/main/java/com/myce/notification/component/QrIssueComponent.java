@@ -1,11 +1,11 @@
-package com.myce.qrcode.component;
+package com.myce.notification.component;
 
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.UserType;
 import com.myce.reservation.repository.ReservationRepository;
-import com.myce.restclient.service.RestClientService;
+import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class QrIssueComponent {
 
     private final ReservationRepository reservationRepository;
-    private final RestClientService restClientService;
+    private final NotificationClientService notificationClientService;
 
     public void notifyQrIssuedByReservation(Long reservationId, boolean isReissue) {
 
@@ -36,12 +36,6 @@ public class QrIssueComponent {
                 "reissue", isReissue
         );
 
-        restClientService.send("notifications/qr-issued",body);
-//        notificationService.sendQrIssuedNotification(
-//                reservation.getUserId(),
-//                reservation.getId(),
-//                reservation.getExpo().getTitle(),
-//                isReissue
-//        );
+        notificationClientService.send("notifications/qr-issued",body);
     }
 }

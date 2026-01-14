@@ -8,7 +8,7 @@ import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.dto.ReserverBulkSaveRequest;
 import com.myce.reservation.entity.Reservation;
 import com.myce.restclient.dto.PaymentCompleteRequest;
-import com.myce.restclient.service.RestClientService;
+import com.myce.restclient.service.NotificationClientService;
 import com.myce.system.dto.message.MessageTemplate;
 import com.myce.system.service.message.GenerateMessageService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class PaymentCommonService {
     private final QrCodeService qrCodeService;
     private final EmailSendService emailSendService;
     private final GenerateMessageService generateMessageService;
-    private final RestClientService restClientService;
+    private final NotificationClientService notificationClientService;
 
     // 마일리지 처리
     public void processMileage(int usedMileage, int savedMileage, long userId)  {
@@ -62,6 +62,7 @@ public class PaymentCommonService {
 
         try {
             String payAmountMessage = PAY_AMOUNT_MESSAGE_FORMAT.formatted(paidAmount);
+
             PaymentCompleteRequest req = PaymentCompleteRequest.builder()
                     .userId(userId)
                     .reservationId(reservationId)
@@ -69,8 +70,7 @@ public class PaymentCommonService {
                     .payAmountMessage(payAmountMessage)
                     .build();
 
-            restClientService.send("notifications/payment-completed", req);
-//            notificationService.sendPaymentCompleteNotification(userId, reservationId, expoTitle, payAmountMessage);
+            notificationClientService.send("notifications/payment-completed", req);
             log.info("가상계좌 결제 완료 알림 발송 - 예약 ID: {}, 회원 ID: {}, 금액: {}",
                                                         reservationId, userId, payAmountMessage);
         } catch (Exception e) {
@@ -82,7 +82,6 @@ public class PaymentCommonService {
     public void sendEmail(Reservation reservation, ReserverBulkSaveRequest.ReserverSaveInfo reserverInfo, int paidAmount) {
         String payAmountMessage = PAY_AMOUNT_MESSAGE_FORMAT.formatted(paidAmount);
 
-        //TODO TO.채린 ~ SendMessageService 하나 생성해도 될 듯. => SendMessageToReservation / 나머지도 해당 서비스에서 다 전송하도록 수정
         try {
             // 새로운 메시지 템플릿 시스템 사용
             MessageTemplate messageTemplate = generateMessageService.getMessageForReservationConfirmation(

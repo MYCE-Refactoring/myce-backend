@@ -15,7 +15,7 @@ import com.myce.expo.repository.AdminPermissionRepository;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
 import com.myce.expo.service.admin.ExpoLifeCycleService;
-import com.myce.expo.service.component.ExpoNotificationComponent;
+import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.member.dto.expo.*;
 import com.myce.member.entity.Member;
 import com.myce.member.entity.type.Role;
