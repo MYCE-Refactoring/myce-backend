@@ -3,6 +3,7 @@ package com.myce.auth.security.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myce.auth.repository.RefreshTokenRepository;
 import com.myce.auth.repository.TokenBlackListRepository;
+import com.myce.auth.repository.impl.OAuth2AuthorizationRequestRepositoryImpl;
 import com.myce.auth.security.filter.CustomLogoutFilter;
 import com.myce.auth.security.filter.JwtAuthenticationFilter;
 import com.myce.auth.security.filter.LoginFilter;
@@ -11,13 +12,11 @@ import com.myce.auth.security.filter.OAuth2LoginSuccessHandler;
 import com.myce.auth.security.provider.AdminAuthenticationProvider;
 import com.myce.auth.security.provider.MemberAuthenticationProvider;
 import com.myce.auth.security.provider.TokenCookieProvider;
-import com.myce.auth.repository.impl.OAuth2AuthorizationRequestRepositoryImpl;
 import com.myce.auth.security.util.JwtUtil;
-import com.myce.auth.service.AdminCodeDetailService;
-import com.myce.auth.service.impl.UserDetailsServiceImpl;
 import com.myce.common.exception.ErrorResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -41,8 +40,6 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final TokenCookieProvider tokenCookieProvider;
-    private final UserDetailsServiceImpl userDetailsService;
-    private final AdminCodeDetailService adminCodeDetailService;
     private final CorsConfigurationSource corsConfigurationSource;
     private final MemberAuthenticationProvider memberAuthenticationProvider;
     private final AdminAuthenticationProvider adminAuthenticationProvider;
@@ -51,6 +48,9 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final OAuth2AuthorizationRequestRepositoryImpl oauth2AuthorizationRequestRepository;
+
+    @Value("${internal.auth.value}")
+    private String INTERNAL_AUTH_VALUE;
 
     @Bean
     public AuthenticationManager authenticationManager() throws Exception {
@@ -66,8 +66,7 @@ public class SecurityConfig {
                 (jwtUtil, tokenCookieProvider, authenticationManager(), refreshTokenRepository);
         loginFilter.setFilterProcessesUrl("/api/auth/login");
 
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter
-                (jwtUtil, userDetailsService, adminCodeDetailService, tokenBlackListRepository);
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(INTERNAL_AUTH_VALUE);
 
         CustomLogoutFilter logoutFilter = new CustomLogoutFilter
                 (jwtUtil, refreshTokenRepository, tokenBlackListRepository, tokenCookieProvider);

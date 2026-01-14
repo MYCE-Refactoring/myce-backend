@@ -1,10 +1,9 @@
 package com.myce.payment.service.refund.impl;
 
 import com.myce.advertisement.repository.AdRepository;
-import com.myce.common.entity.type.TargetType;
+import com.myce.advertisement.service.component.AdNotificationComponent;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
-import com.myce.notification.service.NotificationService;
 import com.myce.payment.dto.PaymentImpUidForRefundRequest;
 import com.myce.payment.dto.PaymentInfoForRefund;
 import com.myce.payment.dto.PaymentRefundRequest;
@@ -47,7 +46,8 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
     private final RefundRepository refundRepository;
     private final AdRepository advertisementRepository;
-    private final NotificationService notificationService;
+
+    private final AdNotificationComponent adNotificationComponent;
 
     @Override
     @Transactional
@@ -203,17 +203,16 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
         Map<String, Object> portOneResponse = refundPayment(refundRequest);
         
         // 5. 광고 상태를 CANCELLED로 변경
-        String oldStatus = advertisement.getStatus().name();
+        AdvertisementStatus oldStatus = advertisement.getStatus();
         advertisement.updateStatus(AdvertisementStatus.CANCELLED);
-        String newStatus = advertisement.getStatus().name();
+        AdvertisementStatus newStatus = advertisement.getStatus();
         advertisementRepository.save(advertisement);
 
-        try {
-            notificationService.sendAdvertisementStatusChangeNotification(
-                    request.getAdId(), advertisement.getTitle(), oldStatus, newStatus);
-        } catch (Exception e) {
-            log.warn("광고 환불 승인 알림 전송 실패 - adId: {}, 오류: {}", request.getAdId(), e.getMessage());
-        }
+        adNotificationComponent.notifyAdStatusChange(
+                advertisement,
+                oldStatus,
+                newStatus
+        );
 
 
         // 6. 결제 상태 업데이트 (부분환불/전체환불 구분)

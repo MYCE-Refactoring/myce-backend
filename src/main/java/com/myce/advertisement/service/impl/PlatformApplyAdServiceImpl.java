@@ -2,8 +2,10 @@ package com.myce.advertisement.service.impl;
 
 import com.myce.advertisement.dto.*;
 import com.myce.advertisement.entity.Advertisement;
+import com.myce.advertisement.entity.type.AdvertisementStatus;
 import com.myce.advertisement.repository.AdRepository;
 import com.myce.advertisement.service.PlatformApplyAdService;
+import com.myce.advertisement.service.component.AdNotificationComponent;
 import com.myce.advertisement.service.mapper.AdInfoMapper;
 import com.myce.common.entity.RejectInfo;
 import com.myce.common.entity.type.TargetType;
@@ -20,7 +22,6 @@ import com.myce.payment.repository.PaymentRepository;
 import com.myce.payment.repository.RefundRepository;
 import com.myce.system.entity.AdFeeSetting;
 import com.myce.system.repository.AdFeeSettingRepository;
-import com.myce.notification.service.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
     private final PaymentRepository paymentRepository;
     private final RefundRepository refundRepository;
     private final AdFeeSettingRepository adFeeSettingRepository;
-    private final NotificationService notificationService;
+    private final AdNotificationComponent adNotificationComponent;
 
     public AdPaymentInfoCheck generatePaymentCheck(Long adId) {
         Advertisement ad = adRepository.findById(adId)
@@ -80,17 +81,11 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
 
         log.info("approveApply - Advertisement : {}", ad);
         adPaymentInfoRepository.save(paymentInfo);
-        
-        String oldStatus = ad.getStatus().name();
-        ad.approve();
-        String newStatus = ad.getStatus().name();
-        
-        // 상태 변경 알림 전송
-        try {
-            notificationService.sendAdvertisementStatusChangeNotification(adId, ad.getTitle(), oldStatus, newStatus);
-        } catch (Exception e) {
-            log.warn("광고 승인 알림 전송 실패 - adId: {}, 오류: {}", adId, e.getMessage());
-        }
+
+        AdvertisementStatus oldStatus = ad.getStatus();
+        ad.reject();
+        AdvertisementStatus newStatus = ad.getStatus();
+        adNotificationComponent.notifyAdStatusChange(ad, oldStatus, newStatus);
     }
 
     @Transactional
@@ -106,17 +101,11 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
         log.info("rejectApply - Advertisement : {}", ad);
 
         rejectInfoRepository.save(rejectInfo);
-        
-        String oldStatus = ad.getStatus().name();
+
+        AdvertisementStatus oldStatus = ad.getStatus();
         ad.reject();
-        String newStatus = ad.getStatus().name();
-        
-        // 상태 변경 알림 전송
-        try {
-            notificationService.sendAdvertisementStatusChangeNotification(adId, ad.getTitle(), oldStatus, newStatus);
-        } catch (Exception e) {
-            log.warn("광고 거절 알림 전송 실패 - adId: {}, 오류: {}", adId, e.getMessage());
-        }
+        AdvertisementStatus newStatus = ad.getStatus();
+        adNotificationComponent.notifyAdStatusChange(ad, oldStatus, newStatus);
     }
 
     public AdRejectInfoResponse getRejectInfo(Long adId) {

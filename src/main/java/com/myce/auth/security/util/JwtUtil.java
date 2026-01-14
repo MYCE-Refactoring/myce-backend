@@ -1,5 +1,6 @@
 package com.myce.auth.security.util;
 
+import com.myce.auth.dto.type.LoginType;
 import io.jsonwebtoken.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +75,7 @@ public class JwtUtil {
                 .getExpiration();
     }
 
-    public String createToken(String category, String loginType, Long id, String loginId, String role) {
+    public String createToken(String category, String loginType, Long id, String role) {
         Date now = new Date(System.currentTimeMillis());
         Date expired = category.equals(ACCESS_TOKEN) ?
                 new Date(now.getTime() + ACCESS_TOKEN_TIME) :
@@ -84,7 +85,6 @@ public class JwtUtil {
                 .claim("category", category)
                 .claim("loginType", loginType)
                 .claim("memberId", id)
-                .claim("loginId", loginId)
                 .claim("role", role)
                 .signWith(secretKey)
                 .expiration(expired)
@@ -106,10 +106,10 @@ public class JwtUtil {
                 .get("memberId", Long.class);
     }
 
-    public String getLoginTypeFromToken(String token) {
+    public LoginType getLoginTypeFromToken(String token) {
         return jwtParser.parseSignedClaims(token)
                 .getPayload()
-                .get("loginType", String.class);
+                .get("loginType", LoginType.class);
     }
 
     public boolean isRefreshToken(String token) {

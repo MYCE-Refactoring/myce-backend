@@ -1,6 +1,6 @@
-package com.myce.reservation.service.impl;
+package com.myce.reservation.service.Impl;
 
-import com.myce.expo.service.TicketService;
+import com.myce.expo.service.info.TicketService;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;

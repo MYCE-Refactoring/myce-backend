@@ -5,12 +5,11 @@ import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.common.exception.CustomException;
 import com.myce.common.exception.CustomErrorCode;
+import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.member.dto.MileageUpdateRequest;
-import com.myce.notification.service.NotificationService;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.ReservationPaymentInfo;
-import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.entity.type.RefundStatus;
 import com.myce.payment.repository.PaymentRepository;
@@ -18,7 +17,6 @@ import com.myce.payment.repository.RefundRepository;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
 import com.myce.payment.service.refund.PaymentRefundService;
 import com.myce.payment.dto.PaymentRefundRequest;
-import com.myce.reservation.dto.ReservationDetailResponse;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.ReservationStatus;
 import com.myce.reservation.repository.ReservationRepository;
@@ -52,7 +50,9 @@ public class RefundRequestServiceImpl implements RefundRequestService {
     private final MemberMileageService memberMileageService;
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
     private final TicketRepository ticketRepository;
-    private final NotificationService notificationService;
+
+
+    private final ExpoNotificationComponent expoNotificationComponent;
 
 
     @Override
@@ -77,15 +77,14 @@ public class RefundRequestServiceImpl implements RefundRequestService {
         boolean isPartialRefund = determineRefundType(expo.getStatus());
         System.out.println("[환불 신청] 엑스포 ID: " + expoId + ", 현재 상태: " + expo.getStatus() + ", 부분환불 여부: " + isPartialRefund);
 
-        try {
-            String oldStatus = expo.getStatus().name();
-            notificationService.sendExpoStatusChangeNotification(expoId, expo.getTitle(), oldStatus, "PENDING_CANCEL");
-        } catch (Exception e) {
-            log.warn("박람회 환불 신청 알림 전송 실패 - expoId: {}, 오류: {}", expoId, e.getMessage());
-        }
+        ExpoStatus oldStatus = expo.getStatus();
 
         // 6. 엑스포 상태를 PENDING_CANCEL로 변경
         expo.updateStatus(ExpoStatus.PENDING_CANCEL);
+
+        ExpoStatus newStatus = expo.getStatus();
+
+        expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
         
         // 7. 환불 엔티티 생성 및 저장
         Refund refund = Refund.builder()

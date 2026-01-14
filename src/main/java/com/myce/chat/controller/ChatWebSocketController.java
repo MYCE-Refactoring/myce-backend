@@ -1,5 +1,6 @@
 package com.myce.chat.controller;
 
+import com.myce.auth.dto.type.LoginType;
 import com.myce.chat.document.ChatMessage;
 import com.myce.chat.document.ChatRoom;
 import com.myce.chat.dto.*;
@@ -819,9 +820,9 @@ public class ChatWebSocketController {
 
         String token = (String) headerAccessor.getSessionAttributes().get("token");
         try {
-            String loginType = jwtUtil.getLoginTypeFromToken(token);
-            if ("ADMIN_CODE".equals(loginType)) {
-                return chatWebSocketService.determineAdminCode(userId, loginType);
+            LoginType loginType = jwtUtil.getLoginTypeFromToken(token);
+            if (loginType == LoginType.ADMIN_CODE) {
+                return chatWebSocketService.determineAdminCode(userId, loginType.name());
             } else {
                 return "SUPER_ADMIN";
             }

@@ -1,8 +1,10 @@
 package com.myce.schedule.jobs;
 
-import com.myce.notification.service.NotificationService;
+import com.myce.expo.entity.Expo;
+import com.myce.notification.component.EventReminderComponent;
 import com.myce.expo.entity.Event;
 import com.myce.expo.repository.EventRepository;
+import com.myce.reservation.repository.ReservationRepository;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +26,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EventNotificationScheduler implements TaskScheduler {
 
-    private final NotificationService notificationService;
     private final EventRepository eventRepository;
+    private final ReservationRepository reservationRepository;
+
+    private final EventReminderComponent eventReminderComponent;
 
     @Value("${scheduler.event-notification:0 0,30 * * * *}")
     private String cronExpression;
@@ -77,21 +81,31 @@ public class EventNotificationScheduler implements TaskScheduler {
             List<Event> expoEvents = upcomingEvents.stream()
                     .filter(event -> event.getExpo().getId().equals(expoId))
                     .collect(Collectors.toList());
-            
-            if (!expoEvents.isEmpty()) {
-                Event firstEvent = expoEvents.get(0);
-                String eventNames = expoEvents.stream()
-                        .map(Event::getName)
-                        .collect(Collectors.joining(", "));
-                
-                notificationService.sendEventHourReminderNotification(
+
+            if (expoEvents.isEmpty()) continue;
+
+            Event firstEvent = expoEvents.get(0);
+            Expo expo = firstEvent.getExpo();
+
+            String expoTitle = expo.getTitle();
+            String eventNames = expoEvents.stream()
+                    .map(Event::getName)
+                    .collect(Collectors.joining(", "));
+
+            List<Long> memberIds =
+                    reservationRepository.findDistinctUserIdsByExpoId(expoId);
+
+            eventReminderComponent.notifyEventHourReminder(
+                    memberIds,
                     expoId,
+                    expoTitle,
                     eventNames,
                     firstEvent.getStartTime().toString()
-                );
+            );
+
                 log.info("[Scheduler] 행사 1시간 전 알림 전송 완료 - 박람회: {}, 이벤트: {}",
                         firstEvent.getExpo().getTitle(), eventNames);
             }
         }
     }
-}
+

@@ -46,28 +46,26 @@ public class AuthTokenServiceImpl implements AuthTokenService {
             throw new CustomException(CustomErrorCode.INVALID_TOKEN);
         }
 
-        String loginType = jwtUtil.getLoginTypeFromToken(refreshToken);
+        LoginType loginType = jwtUtil.getLoginTypeFromToken(refreshToken);
         Long memberId = jwtUtil.getMemberIdFromToken(refreshToken);
 
-        if(!checkValidRefreshToken(refreshToken, loginType, memberId)) {
+        if(!checkValidRefreshToken(refreshToken, loginType.name(), memberId)) {
             throw new CustomException(CustomErrorCode.INVALID_TOKEN);
         }
 
         // 타입에 따른 토큰 발급
         String[] tokens;
-        if (loginType.equals(LoginType.MEMBER.name())) {
+        if (loginType.equals(LoginType.MEMBER)) {
             Member member = memberRepository.findById(memberId)
                     .orElseThrow(() -> new CustomException(CustomErrorCode.INVALID_TOKEN));
-            tokens = getTokens(loginType, memberId, member.getLoginId(), member.getRole().name());
-        } else if (loginType.equals(LoginType.ADMIN_CODE.name())) {
-            AdminCode adminCode = adminCodeRepository.findById(memberId)
-                    .orElseThrow(() -> new UsernameNotFoundException(CustomErrorCode.MEMBER_NOT_EXIST.getMessage()));
-            tokens = getTokens(loginType, memberId, adminCode.getCode(), Role.EXPO_ADMIN.name());
+            tokens = getTokens(loginType.name(), memberId, member.getRole().name());
+        } else if (loginType.equals(LoginType.ADMIN_CODE)) {
+            tokens = getTokens(loginType.name(), memberId, Role.EXPO_ADMIN.name());
         } else {
             throw new CustomException(CustomErrorCode.INVALID_LOGIN_TYPE);
         }
 
-        refreshTokenRepository.save(loginType, memberId, tokens[1], jwtUtil.getRefreshTokenTime());
+        refreshTokenRepository.save(loginType.name(), memberId, tokens[1], jwtUtil.getRefreshTokenTime());
 
         response.addHeader(JwtUtil.AUTHORIZATION_HEADER, tokens[0]);
         ResponseCookie cookie = tokenCookieProvider.getCookie(JwtUtil.REFRESH_TOKEN, tokens[1]);
@@ -84,9 +82,9 @@ public class AuthTokenServiceImpl implements AuthTokenService {
         throw new CustomException(CustomErrorCode.REFRESH_TOKEN_NOT_EXIST);
     }
 
-    private String[] getTokens(String loginType, Long memberId, String loginId, String role) {
-        String accessToken = jwtUtil.createToken(JwtUtil.ACCESS_TOKEN, loginType, memberId, loginId, role);
-        String refreshToken = jwtUtil.createToken(JwtUtil.REFRESH_TOKEN, loginType, memberId, loginId, role);
+    private String[] getTokens(String loginType, Long memberId, String role) {
+        String accessToken = jwtUtil.createToken(JwtUtil.ACCESS_TOKEN, loginType, memberId, role);
+        String refreshToken = jwtUtil.createToken(JwtUtil.REFRESH_TOKEN, loginType, memberId, role);
         return new String[]{accessToken, refreshToken};
     }
 

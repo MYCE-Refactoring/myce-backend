@@ -7,6 +7,7 @@ import com.myce.expo.entity.Ticket;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
+import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.member.dto.expo.ExpoSettlementReceiptResponse;
 import com.myce.member.dto.expo.ExpoSettlementRequest;
 import com.myce.member.mapper.expo.ExpoSettlementReceiptMapper;
@@ -42,6 +43,8 @@ public class SettlementExpoAdminServiceImpl implements SettlementExpoAdminServic
     private final ExpoPaymentInfoRepository expoPaymentInfoRepository;
     private final ReservationRepository reservationRepository;
     private final ExpoSettlementReceiptMapper expoSettlementReceiptMapper;
+
+    private final ExpoNotificationComponent expoNotificationComponent;
     
     @Override
     @Transactional
@@ -60,6 +63,8 @@ public class SettlementExpoAdminServiceImpl implements SettlementExpoAdminServic
             log.error("Settlement request failed - Invalid expo status: {}, expoId: {}", expo.getStatus(), expoId);
             throw new CustomException(CustomErrorCode.INVALID_EXPO_STATUS);
         }
+
+        ExpoStatus oldStatus = expo.getStatus();
         
         // 3. Check if settlement already exists and update or create
         Settlement existingSettlement = settlementRepository.findByExpoId(expoId).orElse(null);
@@ -87,6 +92,14 @@ public class SettlementExpoAdminServiceImpl implements SettlementExpoAdminServic
         
         // 4. Update expo status to SETTLEMENT_REQUESTED
         expo.updateStatus(ExpoStatus.SETTLEMENT_REQUESTED);
+
+        ExpoStatus newStatus = expo.getStatus();
+
+        expoNotificationComponent.notifyExpoStatusChange(
+                expo,
+                oldStatus,
+                newStatus
+        );
         
         log.info("Settlement request completed - expoId: {}", expoId);
     }

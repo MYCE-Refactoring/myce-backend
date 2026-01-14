@@ -2,8 +2,10 @@ package com.myce.auth.service.impl;
 
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.auth.dto.type.LoginType;
+import com.myce.expo.entity.AdminCode;
 import com.myce.member.entity.Member;
 import com.myce.member.entity.type.ProviderType;
+import com.myce.member.entity.type.Role;
 import com.myce.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,10 +27,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return CustomUserDetails.builder()
                 .loginType(LoginType.MEMBER)
                 .memberId(member.getId())
-                .name(member.getName())
-                .loginId(loginId)
-                .password(member.getPassword())
                 .role(member.getRole().name())
+                .build();
+    }
+
+    public UserDetails loadAdminUser(String code) {
+        return CustomUserDetails.builder()
+                .loginType(LoginType.ADMIN_CODE)
+                .role(Role.EXPO_ADMIN.name())
                 .build();
     }
 }

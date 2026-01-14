@@ -12,8 +12,6 @@ import com.myce.common.permission.ExpoAdminPermission;
 import com.myce.common.repository.BusinessProfileRepository;
 import com.myce.common.service.ExpoAdminBusinessProfileService;
 import com.myce.common.service.mapper.ExpoAdminBusinessProfileMapper;
-import com.myce.expo.repository.AdminPermissionRepository;
-import com.myce.expo.repository.ExpoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

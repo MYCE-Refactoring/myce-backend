@@ -1,14 +1,17 @@
 package com.myce.qrcode.service.impl;
 
-import com.myce.notification.service.NotificationService;
+import com.myce.notification.component.MemberNotificationComponent;
 import com.myce.notification.service.SupportEmailService;
 import com.myce.qrcode.service.QrNotificationService;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.Reserver;
 import com.myce.reservation.entity.code.UserType;
+import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 /**
  * QR 알림 전송 서비스 구현체
@@ -18,8 +21,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class QrNotificationServiceImpl implements QrNotificationService {
 
-    private final NotificationService notificationService;
     private final SupportEmailService supportEmailService;
+    private final MemberNotificationComponent memberNotificationComponent;
 
     @Override
     public void sendQrIssuedNotification(Reserver reserver, boolean isReissue) {
@@ -27,9 +30,12 @@ public class QrNotificationServiceImpl implements QrNotificationService {
             Reservation reservation = reserver.getReservation();
             String expoTitle = reservation.getExpo().getTitle();
 
+            Long reservationId = reservation.getId();
+            Long memberId = reservation.getUserId();
+
             if (reservation.getUserType() == UserType.MEMBER) {
                 // 회원: 사이트 내 알림 + SSE 전송
-                sendMemberNotification(reserver, reservation, expoTitle, isReissue);
+                memberNotificationComponent.sendMemberNotification(memberId, reservationId, expoTitle, isReissue);
             } else {
                 // 비회원: 이메일 알림
                 sendGuestEmailNotification(reserver, reservation, expoTitle, isReissue);
@@ -40,16 +46,9 @@ public class QrNotificationServiceImpl implements QrNotificationService {
         }
     }
 
-    /**
-     * 회원에게 사이트 내 알림 + SSE 전송
-     */
-    private void sendMemberNotification(Reserver reserver, Reservation reservation,
-                                        String expoTitle, boolean isReissue) {
-        Long memberId = reservation.getUserId();
-        notificationService.sendQrIssuedNotification(memberId, reservation.getId(), expoTitle, isReissue);
-        log.info("회원 QR {} 알림 처리 완료 - 예약자 ID: {}, 회원 ID: {}",
-                isReissue ? "재발급" : "발급", reserver.getId(), memberId);
-    }
+
+
+
 
     /**
      * 비회원에게 이메일 알림 전송

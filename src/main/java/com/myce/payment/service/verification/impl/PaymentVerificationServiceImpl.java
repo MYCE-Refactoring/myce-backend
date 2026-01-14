@@ -5,7 +5,6 @@ import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.member.service.MemberAdService;
 import com.myce.member.service.MemberExpoService;
-import com.myce.notification.service.NotificationService;
 import com.myce.payment.dto.PaymentInfoDetailDto;
 import com.myce.payment.dto.PaymentVerifyInfo;
 import com.myce.payment.dto.PaymentVerifyResponse;
@@ -43,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class PaymentVerificationServiceImpl implements PaymentVerificationService {
+
     private final PortOneApiService portOneApiService;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
@@ -52,7 +52,6 @@ public class PaymentVerificationServiceImpl implements PaymentVerificationServic
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
     private final MemberExpoService memberExpoService;
     private final MemberAdService memberAdService;
-    private final NotificationService notificationService;
     private final VerifyPaymentService verifyPaymentService;
     private final PaymentCommonService paymentCommonService;
 
@@ -149,9 +148,12 @@ public class PaymentVerificationServiceImpl implements PaymentVerificationServic
 
     private ReservationPaymentInfo saveReservationPaymentInfo(
             PaymentVerifyInfo verifyInfo, PaymentStatus paymentStatus) {
+
+
         // 예약 정보 조회
         Reservation reservation = reservationRepository.findById(verifyInfo.getTargetId())
                 .orElseThrow(() -> new CustomException(CustomErrorCode.RESERVATION_NOT_FOUND));
+
 
         // 비회원 적림금 지급 방지 추가
         if (reservation.getUserType().equals(UserType.GUEST)) verifyInfo.setSavedMileage(0);
@@ -194,6 +196,7 @@ public class PaymentVerificationServiceImpl implements PaymentVerificationServic
 
         // completeExpoPayment 호출
         memberExpoService.completeExpoPayment(memberId, verifyInfo.getTargetId());
+
         return expoPaymentInfo;
     }
 }

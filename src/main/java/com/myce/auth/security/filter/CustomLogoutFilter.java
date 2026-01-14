@@ -1,5 +1,6 @@
 package com.myce.auth.security.filter;
 
+import com.myce.auth.dto.type.LoginType;
 import com.myce.auth.repository.RefreshTokenRepository;
 import com.myce.auth.repository.TokenBlackListRepository;
 import com.myce.auth.security.provider.TokenCookieProvider;
@@ -46,7 +47,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
 
-        String loginType = jwtUtil.getLoginTypeFromToken(accessToken);
+        LoginType loginType = jwtUtil.getLoginTypeFromToken(accessToken);
         Long memberId = jwtUtil.getMemberIdFromToken(accessToken);
 
         long time = jwtUtil.getRemainingTimeForExpiration(accessToken);
@@ -55,7 +56,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
         // refreshToken 삭제
         String refreshToken = getRefreshToken(request.getCookies());
         if(refreshToken != null) {
-            refreshTokenRepository.deleteByLoginTypeAndMemberId(loginType, memberId);
+            refreshTokenRepository.deleteByLoginTypeAndMemberId(loginType.toString(), memberId);
         }
 
         // 쿠키 초기화
