@@ -1,7 +1,7 @@
 package com.myce.qrcode.service.impl;
 
+import com.myce.notification.component.MailSendComponent;
 import com.myce.notification.component.MemberNotificationComponent;
-import com.myce.notification.service.SupportEmailService;
 import com.myce.qrcode.service.QrNotificationService;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.Reserver;
@@ -21,8 +21,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class QrNotificationServiceImpl implements QrNotificationService {
 
-    private final SupportEmailService supportEmailService;
     private final MemberNotificationComponent memberNotificationComponent;
+    private final MailSendComponent mailSendComponent;
 
     @Override
     public void sendQrIssuedNotification(Reserver reserver, boolean isReissue) {
@@ -74,7 +74,7 @@ public class QrNotificationServiceImpl implements QrNotificationService {
                 reservation.getReservationCode()
         );
 
-        supportEmailService.sendSupportMail(reserver.getEmail(), subject, body);
+        mailSendComponent.sendSupportMail(reserver.getEmail(), subject, body);
         log.info("비회원 QR {} 이메일 알림 전송 완료 - 예약자 ID: {}, 이메일: {}",
                 isReissue ? "재발급" : "발급", reserver.getId(), reserver.getEmail());
     }

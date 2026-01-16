@@ -1,5 +1,6 @@
 package com.myce.notification.component;
 
+import com.myce.notification.component.endpoints.NotificationEndPoints;
 import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,6 @@ public class QrIssueComponent {
                 "expoTitle", expoTitle,
                 "reissue", isReissue
         );
-        notificationClientService.send("notifications/qr-issued",body);
+        notificationClientService.send( NotificationEndPoints.QR_ISSUED,body);
     }
 }

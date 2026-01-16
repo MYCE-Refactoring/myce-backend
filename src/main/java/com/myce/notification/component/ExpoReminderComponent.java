@@ -1,5 +1,6 @@
 package com.myce.notification.component;
 
+import com.myce.notification.component.endpoints.NotificationEndPoints;
 import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,14 +19,12 @@ public class ExpoReminderComponent {
         if (userIds.isEmpty()) {
             return;
         }
-
         Map<String, Object> body = Map.of(
                 "memberIds", userIds,
                 "expoId", expoId,
                 "expoTitle", expoTitle
         );
-
-        notificationClientService.send("notifications/event-reminder", body);
+        notificationClientService.send(NotificationEndPoints.EVENT_REMINDER, body);
 
     }
 }

@@ -14,9 +14,7 @@ import com.myce.member.entity.MemberGrade;
 import com.myce.member.entity.type.GradeCode;
 import com.myce.member.repository.MemberGradeRepository;
 import com.myce.member.repository.MemberRepository;
-import com.myce.notification.service.EmailSendService;
-import com.myce.system.dto.message.MessageTemplate;
-import com.myce.system.service.message.GenerateMessageService;
+import com.myce.notification.component.MailSendComponent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,8 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final MemberGradeRepository memberGradeRepository;
     private final RandomCodeGenerateUtil randomCodeGenerateUtil;
-    private final GenerateMessageService messageTemplateService;
-    private final EmailSendService emailSendService;
+    private final MailSendComponent mailSendComponent;
 
     public void signup(SignupRequest signupRequest) {
         if(memberRepository.existsByLoginId(signupRequest.getLoginId())) {
@@ -71,8 +68,10 @@ public class AuthServiceImpl implements AuthService {
         String tempPassword = randomCodeGenerateUtil.generateRandomCode(TEMP_PASSWORD_LENGTH);
         member.resetPassword(passwordEncoder.encode(tempPassword));
 
-        MessageTemplate messageTemplate = messageTemplateService.getMessageForResetPassword(tempPassword);
-        emailSendService.sendMail(request.getEmail(), messageTemplate.getSubject(), messageTemplate.getContent());
+//        MessageTemplate messageTemplate = messageTemplateService.getMessageForResetPassword(tempPassword);
+//        mailSendComponent.sendMail(request.getEmail(), messageTemplate.getSubject(), messageTemplate.getContent());
+
+        mailSendComponent.sendResetPwMail(request.getEmail(), tempPassword);
     }
 
     @Override

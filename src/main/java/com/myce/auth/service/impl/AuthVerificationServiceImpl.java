@@ -9,9 +9,7 @@ import com.myce.auth.service.AuthVerificationService;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.common.util.RandomCodeGenerateUtil;
-import com.myce.notification.service.EmailSendService;
-import com.myce.system.dto.message.MessageTemplate;
-import com.myce.system.service.message.GenerateMessageService;
+import com.myce.notification.component.MailSendComponent;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,24 +23,26 @@ public class AuthVerificationServiceImpl implements AuthVerificationService {
     private static final int RANDOM_CODE_LENGTH = 6;
     private static final int LIMIT_TIME = 10;
 
-    private final EmailSendService emailSendService;
     private final RandomCodeGenerateUtil randomCodeGenerateUtil;
-    private final GenerateMessageService messageTemplateService;
     private final EmailVerificationRepository emailVerificationRepository;
+    private final MailSendComponent mailSendComponent;
 
     @Override
     public void sendVerificationMail(VerificationEmailRequest request) {
         String email = request.getEmail();
         String code = randomCodeGenerateUtil.generateRandomCode(RANDOM_CODE_LENGTH);
         VerificationType verificationType = request.getVerificationType();
-        MessageTemplate messageTemplate = messageTemplateService
-                .getMessageForVerification(verificationType.getDescription(), code, String.valueOf(LIMIT_TIME));
 
-        emailSendService.sendMail(
-                email,
-                messageTemplate.getSubject(),
-                messageTemplate.getContent()
-                );
+
+//        MessageTemplate messageTemplate = messageTemplateService
+//                .getMessageForVerification(verificationType.getDescription(), code, String.valueOf(LIMIT_TIME));
+//
+//        mailSendComponent.sendMail(
+//                email,
+//                messageTemplate.getSubject(),
+//                messageTemplate.getContent()
+//                );
+        mailSendComponent.sendVerificationMail(email, verificationType.getDescription(), code,String.valueOf(LIMIT_TIME));
 
         log.debug("[EmailVerification-{}] Successfully sent verification email to {}", verificationType.name(), email);
         EmailVerificationInfo emailVerification = new EmailVerificationInfo(email, code, LocalDateTime.now());

@@ -264,6 +264,7 @@ public class ExpoLifeCycleServiceImpl implements ExpoLifeCycleService {
     
     @Override
     public ExpoRefundReceiptResponse getExpoRefundHistory(Long memberId, Long expoId) {
+
         // 박람회가 해당 회원의 것인지 확인
         Expo expo = expoRepository.findById(expoId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.EXPO_NOT_FOUND));

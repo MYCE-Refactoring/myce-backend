@@ -10,7 +10,7 @@ import com.myce.common.permission.ExpoAdminPermission;
 import com.myce.common.repository.BusinessProfileRepository;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.repository.ExpoRepository;
-import com.myce.notification.service.EmailSendService;
+import com.myce.notification.component.MailSendComponent;
 import com.myce.reservation.repository.ReserverRepository;
 import com.myce.system.document.EmailLog;
 import com.myce.system.dto.email.ExpoAdminEmailRequest;
@@ -37,9 +37,9 @@ public class ExpoAdminEmailServiceImpl implements ExpoAdminEmailService {
 
     private final ReserverRepository reserverRepository;
     private final EmailLogRepository emailLogRepository;
-    private final EmailSendService emailSendService;
     private final SpringTemplateEngine templateEngine;
     private final ExpoAdminEmailMapper mapper;
+    private final MailSendComponent mailSendComponent;
     
     //TODO : 추후 링크 교체, 또는 @Value로 값 주입
     private final String TERMS_URL= "http://www.myce.live";
@@ -67,15 +67,16 @@ public class ExpoAdminEmailServiceImpl implements ExpoAdminEmailService {
                     .stream()
                     .map(r -> new EmailLog.RecipientInfo(r.getEmail(),r.getName()))
                     .toList();
-        }else{
+        } else{
             recipientInfos = dto.getRecipientInfos();
         }
 
         List<String> emails = recipientInfos.stream()
                         .map(EmailLog.RecipientInfo::getEmail)
                         .toList();
-        
-        emailSendService.sendMailToMultiple(emails, dto.getSubject(), html); //TODO: 추후 대량 이메일 전송 대비 배치 도입 고려
+
+        //internal 알림서버 호출 (메일전송)
+        mailSendComponent.sendMailToMultiple(emails, dto.getSubject(), html); //TODO: 추후 대량 이메일 전송 대비 배치 도입 고려
 
         emailLogRepository.save(mapper.toDocument(expoId,dto,recipientInfos));
     }

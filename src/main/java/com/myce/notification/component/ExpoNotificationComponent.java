@@ -2,6 +2,7 @@ package com.myce.notification.component;
 
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
+import com.myce.notification.component.endpoints.NotificationEndPoints;
 import com.myce.notification.dto.ExpoStatusChangeCommand;
 import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class ExpoNotificationComponent {
 
         ExpoStatusChangeCommand command = commandGenerator(expo, oldStatus, newStatus);
 
-        notificationClientService.send("notifications/expo-status-changed", command);
+        notificationClientService.send( NotificationEndPoints.EXPO_STATUS_CHANGED, command);
 
     }
 

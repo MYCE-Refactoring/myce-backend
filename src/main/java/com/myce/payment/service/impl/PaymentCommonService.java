@@ -3,15 +3,12 @@ package com.myce.payment.service.impl;
 import com.myce.member.dto.MileageUpdateRequest;
 import com.myce.member.service.MemberGradeService;
 import com.myce.member.service.MemberMileageService;
+import com.myce.notification.component.MailSendComponent;
 import com.myce.notification.component.PaymentCompleteComponent;
-import com.myce.notification.service.EmailSendService;
 import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.dto.ReserverBulkSaveRequest;
 import com.myce.reservation.entity.Reservation;
 import com.myce.restclient.dto.PaymentCompleteRequest;
-import com.myce.restclient.service.NotificationClientService;
-import com.myce.system.dto.message.MessageTemplate;
-import com.myce.system.service.message.GenerateMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,9 +23,8 @@ public class PaymentCommonService {
     private final MemberMileageService memberMileageService;
     private final MemberGradeService memberGradeService;
     private final QrCodeService qrCodeService;
-    private final EmailSendService emailSendService;
-    private final GenerateMessageService generateMessageService;
     private final PaymentCompleteComponent paymentCompleteComponent;
+    private final MailSendComponent mailSendComponent;
 
     // 마일리지 처리
     public void processMileage(int usedMileage, int savedMileage, long userId)  {
@@ -43,7 +39,6 @@ public class PaymentCommonService {
         // 회원 등급 업데이트
         memberGradeService.udpateGrade(userId);
     }
-
     // QR 생성
     public void issueQrForReservation(Reservation reservation) {
         try {
@@ -54,7 +49,6 @@ public class PaymentCommonService {
                     reservation.getId(), qrError.getMessage());
         }
     }
-
     // 알림 전송
     public void sendAlert(Reservation reservation, int paidAmount) {
         long reservationId = reservation.getId();
@@ -85,21 +79,29 @@ public class PaymentCommonService {
         String payAmountMessage = PAY_AMOUNT_MESSAGE_FORMAT.formatted(paidAmount);
 
         try {
-            // 새로운 메시지 템플릿 시스템 사용
-            MessageTemplate messageTemplate = generateMessageService.getMessageForReservationConfirmation(
+//            // 새로운 메시지 템플릿 시스템 사용
+//            MessageTemplate messageTemplate = generateMessageService.getMessageForReservationConfirmation(
+//                    reserverInfo.getName(),
+//                    reservation.getExpo().getTitle(),
+//                    reservation.getReservationCode(),
+//                    reservation.getQuantity(),
+//                    payAmountMessage,
+//                    reservation.getUserType()
+//            );
+//
+//            mailSendComponent.sendMail(
+//                    reserverInfo.getEmail(),
+//                    messageTemplate.getSubject(),
+//                    messageTemplate.getContent()
+//            );
+
+            mailSendComponent.sendConfirmMail(reserverInfo.getEmail(),
                     reserverInfo.getName(),
                     reservation.getExpo().getTitle(),
                     reservation.getReservationCode(),
                     reservation.getQuantity(),
                     payAmountMessage,
-                    reservation.getUserType()
-            );
-
-            emailSendService.sendMail(
-                    reserverInfo.getEmail(),
-                    messageTemplate.getSubject(),
-                    messageTemplate.getContent()
-            );
+                    reservation.getUserType());
 
             log.info("예매 완료 이메일 전송 완료 - 예약 ID: {}, 사용자 유형: {}, 이메일: {}",
                     reservation.getId(), reservation.getUserType(), reserverInfo.getEmail());
