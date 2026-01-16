@@ -10,6 +10,7 @@ public final class SecurityEndpoints {
     // ===== POST 요청 허용 엔드포인트 =====
     public static final String[] POST_PERMIT_ALL = {
             "/api/auth/**",
+            "/api/internal/**",
             "/api/reservations/**",
             "/api/reservers",
             "/api/reservations/pre-reservation",
@@ -19,6 +20,7 @@ public final class SecurityEndpoints {
 
     // ===== GET 요청 허용 엔드포인트 =====
     public static final String[] GET_PERMIT_ALL = {
+            "/api/internal/**",
             "/api/ads",
             "/api/auth/**",
             "/api/categories",
