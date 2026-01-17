@@ -54,16 +54,17 @@ public class AdFeeServiceImpl implements AdFeeService {
     public AdFeeListResponse getAdFeeList(int page, Long positionId, String name) {
         Sort sort = Sort.by("createdAt").descending();
         Pageable pageable = PageRequest.of(page, 10, sort);
-        Page<AdFeeSetting> adFeeSettings;
 
-        if(positionId != null && name != null)
-            adFeeSettings = adFeeSettingRepository.findAllByAdPosition_IdAndNameContaining(positionId, name, pageable);
-        else if(positionId != null)
-            adFeeSettings = adFeeSettingRepository.findAllByAdPosition_Id(positionId, pageable);
-        else if(name != null)
-            adFeeSettings = adFeeSettingRepository.findAllByNameContains(name, pageable);
-        else
-            adFeeSettings= adFeeSettingRepository.findAll(pageable);
+        Page<AdFeeSetting> adFeeSettings = adFeeSettingRepository.search(positionId, name, pageable);
+
+//        if(positionId != null && name != null)
+//            adFeeSettings = adFeeSettingRepository.findAllByAdPosition_IdAndNameContaining(positionId, name, pageable);
+//        else if(positionId != null)
+//            adFeeSettings = adFeeSettingRepository.findAllByAdPosition_Id(positionId, pageable);
+//        else if(name != null)
+//            adFeeSettings = adFeeSettingRepository.findAllByNameContains(name, pageable);
+//        else
+//            adFeeSettings= adFeeSettingRepository.findAll(pageable);
 
         return adFeeMapper.toListResponse(adFeeSettings);
     }

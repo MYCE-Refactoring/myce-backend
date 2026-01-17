@@ -24,23 +24,6 @@ import java.util.Map;
 public class QrCodeController {
 
     private final QrCodeService qrCodeService;
-    private final NotificationClientService notificationClientService;
-
-
-    @PostMapping("/qr-issued")
-    public void callNotificationServer() {
-
-        Map<String, Object> body = Map.of(
-                "memberId", 1L,
-                "reservationId", 200L,
-                "expoTitle", "테스트 박람회",
-                "reissue", false
-        );
-
-        notificationClientService.send("/notifications/qr-issued", body);
-
-    }
-
 
     @PostMapping("/issue/{reserverId}")
     public ResponseEntity<Void> issue(@PathVariable Long reserverId) {
