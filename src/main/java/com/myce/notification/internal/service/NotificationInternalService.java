@@ -30,13 +30,22 @@ public class NotificationInternalService {
 
     @Transactional
     public MailSendContextResponse mailSendContext(MailSendContextRequest req) {
-        List<RecipientInfoDto> recipientInfos = reserverRepository
-                .findReserversByFilter(req.getExpoId(),
-                        req.getEntranceStatus(), req.getName(), req.getPhone(),
-                        req.getReservationCode(), req.getTicketName())
-                .stream()
-                .map(r -> new RecipientInfoDto(r.getEmail(), r.getName()))
-                .toList();
+//        List<RecipientInfoDto> recipientInfos = reserverRepository
+//                .findReserversByFilter(req.getExpoId(),
+//                        req.getEntranceStatus(), req.getName(), req.getPhone(),
+//                        req.getReservationCode(), req.getTicketName())
+//                .stream()
+//                .map(r -> new RecipientInfoDto(r.getEmail(), r.getName()))
+//                .toList();
+        List<RecipientInfoDto> recipientInfos =
+                reserverRepository.searchByFilter(
+                        req.getExpoId(),
+                        req.getEntranceStatus(),
+                        req.getName(),
+                        req.getPhone(),
+                        req.getReservationCode(),
+                        req.getTicketName()
+                );
 
         String expoName = expoRepository.findById(req.getExpoId())
                 .map( Expo::getTitle)

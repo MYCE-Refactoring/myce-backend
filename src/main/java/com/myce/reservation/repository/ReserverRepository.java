@@ -5,6 +5,7 @@ import com.myce.reservation.dto.ExpoAdminPaymentDetailResponse;
 import com.myce.reservation.dto.ExpoAdminReservationResponse;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.Reserver;
+import com.myce.reservation.repository.impl.ReserverRepositoryCustom;
 import jakarta.persistence.QueryHint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Repository
-public interface ReserverRepository extends JpaRepository<Reserver, Long> {
+public interface ReserverRepository extends JpaRepository<Reserver, Long>, ReserverRepositoryCustom {
 
     List<Reserver> findByReservation(Reservation reservation);
 

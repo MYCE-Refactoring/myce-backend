@@ -30,6 +30,9 @@ public class AdFeeSettingRepositoryImpl implements AdFeeSettingRepositoryCustom 
                         positionEq(positionId),
                         nameContains(name)
                 )
+                .orderBy(
+                        adFee.createdAt.desc()
+                )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
