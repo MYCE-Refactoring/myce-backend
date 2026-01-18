@@ -1,5 +1,6 @@
 package com.myce.reservation.repository.impl;
 
+import com.myce.expo.entity.QExpo;
 import com.myce.expo.entity.QTicket;
 import com.myce.notification.internal.dto.RecipientInfoDto;
 import com.myce.qrcode.entity.QQrCode;
@@ -11,6 +12,7 @@ import com.myce.system.entity.AdFeeSetting;
 import com.myce.system.entity.QAdFeeSetting;
 import com.myce.system.entity.QAdPosition;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +49,7 @@ public class ReserverRepositoryImpl implements ReserverRepositoryCustom {
 
         return queryFactory
                 .select(
-                        com.querydsl.core.types.Projections.constructor(
+                        Projections.constructor(
                                 RecipientInfoDto.class,
                                 rv.email,
                                 rv.name
@@ -60,6 +62,19 @@ public class ReserverRepositoryImpl implements ReserverRepositoryCustom {
                 .where(where)
                 .distinct()
                 .fetch();
+    }
+
+    private BooleanExpression expoIdRange(QExpo rx, Long startId, Long endId) {
+        if (startId != null && endId != null) {
+            return rx.id.between(startId, endId);
+        }
+        if (startId != null) {
+            return rx.id.goe(startId);
+        }
+        if (endId != null) {
+            return rx.id.loe(endId);
+        }
+        return null;
     }
 
     private BooleanExpression reserverNameContains(QReserver rv, String name) {
