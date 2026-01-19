@@ -11,6 +11,8 @@ external:
     notification: http://localhost:8013/internal
     payment: http://localhost:8023/internal
     chat: http://localhost:8033/internal
+  auth:
+    value: internal-request
 
 logging:
   level:

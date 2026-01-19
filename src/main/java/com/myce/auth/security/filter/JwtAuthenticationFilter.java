@@ -21,6 +21,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final String INTERNAL_AUTH_VALUE;
+    private final String GATEWAY_AUTH_VALUE;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -30,11 +31,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.debug("[JwtAuthenticationFilter] Input uri={}, method={}", uri, method);
 
         String authValue = request.getHeader(InternalHeaderKey.INTERNAL_AUTH);
-        if (authValue == null || !authValue.equals(INTERNAL_AUTH_VALUE)) {
-            log.info("Not exist auth value. authValue={}", authValue);
+        if (authValue == null ||
+                (!authValue.equals(INTERNAL_AUTH_VALUE)
+                        && !authValue.equals(GATEWAY_AUTH_VALUE))) {
+
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+
 
         String role = request.getHeader(InternalHeaderKey.INTERNAL_ROLE);
         String loginTypeStr = request.getHeader(InternalHeaderKey.INTERNAL_LOGIN_TYPE);

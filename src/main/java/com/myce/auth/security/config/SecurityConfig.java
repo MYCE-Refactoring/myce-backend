@@ -50,6 +50,9 @@ public class SecurityConfig {
     private final OAuth2AuthorizationRequestRepositoryImpl oauth2AuthorizationRequestRepository;
 
     @Value("${internal.auth.value}")
+    private String GATEWAY_AUTH_VALUE;
+
+    @Value("${external.auth.value}")
     private String INTERNAL_AUTH_VALUE;
 
     @Bean
@@ -66,7 +69,7 @@ public class SecurityConfig {
                 (jwtUtil, tokenCookieProvider, authenticationManager(), refreshTokenRepository);
         loginFilter.setFilterProcessesUrl("/api/auth/login");
 
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(INTERNAL_AUTH_VALUE);
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(INTERNAL_AUTH_VALUE, GATEWAY_AUTH_VALUE);
 
         CustomLogoutFilter logoutFilter = new CustomLogoutFilter
                 (jwtUtil, refreshTokenRepository, tokenBlackListRepository, tokenCookieProvider);
