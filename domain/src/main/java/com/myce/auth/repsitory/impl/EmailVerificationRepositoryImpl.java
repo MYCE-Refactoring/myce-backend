@@ -1,8 +1,8 @@
-package com.myce.auth.repository.impl;
+package com.myce.auth.repsitory.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myce.auth.entity.EmailVerificationInfo;
-import com.myce.auth.repository.EmailVerificationRepository;
+import com.myce.auth.repsitory.EmailVerificationRepository;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

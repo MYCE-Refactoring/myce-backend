@@ -1,4 +1,4 @@
-package com.myce.notification.internal.service;
+package com.myce.internal.service;
 
 import com.myce.common.entity.BusinessProfile;
 import com.myce.common.entity.type.TargetType;
@@ -7,8 +7,8 @@ import com.myce.common.exception.CustomException;
 import com.myce.common.repository.BusinessProfileRepository;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.repository.ExpoRepository;
-import com.myce.notification.internal.dto.MailSendContextRequest;
-import com.myce.notification.internal.dto.MailSendContextResponse;
+import com.myce.internal.dto.MailSendContextRequest;
+import com.myce.internal.dto.MailSendContextResponse;
 import com.myce.reservation.dto.RecipientInfoDto;
 import com.myce.reservation.repository.ReserverRepository;
 import jakarta.transaction.Transactional;

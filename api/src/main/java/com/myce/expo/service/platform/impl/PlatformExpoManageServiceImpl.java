@@ -30,7 +30,6 @@ import com.myce.expo.service.platform.mapper.ExpoPaymentPreviewMapper;
 import com.myce.settlement.service.SettlementPlatformAdminService;
 import com.myce.system.entity.ExpoFeeSetting;
 import com.myce.system.repository.ExpoFeeSettingRepository;
-import com.myce.member.repository.MemberRepository;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.ReservationStatus;
 import com.myce.reservation.repository.ReservationRepository;

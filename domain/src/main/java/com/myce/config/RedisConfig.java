@@ -1,4 +1,4 @@
-package com.myce.common.config;
+package com.myce.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

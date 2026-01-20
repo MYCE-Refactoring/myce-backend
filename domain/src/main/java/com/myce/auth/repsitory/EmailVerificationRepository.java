@@ -1,4 +1,4 @@
-package com.myce.auth.repository;
+package com.myce.auth.repsitory;
 
 import com.myce.auth.entity.EmailVerificationInfo;
 

@@ -1,6 +1,5 @@
-package com.myce.common.permission;
+package com.myce.internal.service;
 
-import com.myce.auth.dto.type.LoginType;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.AdminPermission;
@@ -8,6 +7,8 @@ import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.AdminPermissionRepository;
 import com.myce.expo.repository.ExpoRepository;
+import com.myce.internal.dto.type.ExpoAdminPermission;
+import com.myce.internal.dto.type.LoginType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -10,7 +10,6 @@ public enum Role {
                 return role;
             }
         }
-
         throw new IllegalArgumentException("MEMBER_ROLE_NOT_EXIST: " + name);
     }
 }

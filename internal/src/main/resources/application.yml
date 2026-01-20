@@ -1,0 +1,31 @@
+server:
+  port: 8083
+  forward-headers-strategy: native
+
+external:
+  auth:
+    value: internal-request
+
+logging:
+  level:
+    root: info
+    com.myce: debug
+    com.myce.common.aop.ControllerLoggingAspect: debug
+
+spring:
+  profiles:
+    active: ${PROFILE}
+    include:
+      - domain
+      - common
+  config: # load .env variables
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:../.env[.properties]
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    persistAuthorization: true
+  api-docs:
+    path: /v3/api-docs
