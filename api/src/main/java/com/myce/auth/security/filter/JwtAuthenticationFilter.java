@@ -31,10 +31,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.debug("[JwtAuthenticationFilter] Input uri={}, method={}", uri, method);
 
         String authValue = request.getHeader(InternalHeaderKey.INTERNAL_AUTH);
-        if (authValue == null ||
-                (!authValue.equals(INTERNAL_AUTH_VALUE)
-                        && !authValue.equals(GATEWAY_AUTH_VALUE))) {
 
+        log.info("INTERNAL_AUTH={}, ROLE={}, LOGIN_TYPE={}, MEMBER_ID={}",
+                authValue,
+                request.getHeader(InternalHeaderKey.INTERNAL_ROLE),
+                request.getHeader(InternalHeaderKey.INTERNAL_LOGIN_TYPE),
+                request.getHeader(InternalHeaderKey.INTERNAL_MEMBER_ID)
+        );
+
+        if (authValue == null ||
+                (!authValue.equals(INTERNAL_AUTH_VALUE) && !authValue.equals(GATEWAY_AUTH_VALUE))) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }

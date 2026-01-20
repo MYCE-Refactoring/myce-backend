@@ -58,7 +58,12 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public MemberInfoListResponse getMemberInfoByRole(int page, String roleKeyword) {
-        Role role = Role.fromName(roleKeyword);
+        Role role;
+        try {
+            role = Role.fromName(roleKeyword);
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(CustomErrorCode.MEMBER_ROLE_NOT_EXIST);
+        }
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, 15, sort);
         Page<Member> memberPage = memberRepository.findByRole(role, pageable);
