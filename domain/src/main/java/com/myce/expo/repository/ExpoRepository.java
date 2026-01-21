@@ -2,6 +2,11 @@ package com.myce.expo.repository;
 
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,15 +14,22 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-
 @Repository
 public interface ExpoRepository extends JpaRepository<Expo, Long> {
     Optional<Expo> findFirstByMemberIdAndStatusInOrderByCreatedAtDesc(Long memberId, List<ExpoStatus> status);
+
+    @Query("""
+      SELECT e.member.id
+      FROM Expo e
+      WHERE e.id = :expoId
+    """)
+    Optional<Long> findMemberIdById(Long expoId);
+
+    // AI 상담용 - 최신 박람회 5개 조회
+    @Query("SELECT e FROM Expo e "
+            + "ORDER BY e.createdAt DESC "
+            + "LIMIT :count")
+    List<Expo> findRecentExpo(@Param("count") int count);
 
     @Query("""
         select e.id
