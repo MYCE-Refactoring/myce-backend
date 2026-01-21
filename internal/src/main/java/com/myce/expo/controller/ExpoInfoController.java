@@ -4,11 +4,11 @@ import com.myce.expo.dto.AdminCodeInfo;
 import com.myce.expo.dto.ExpoInfoListResponse;
 import com.myce.expo.dto.ExpoInfoResponse;
 import com.myce.expo.service.ExpoInfoService;
-import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,14 +28,14 @@ public class ExpoInfoController {
     }
 
     @GetMapping("/{expo-id}")
-    public ResponseEntity<ExpoInfoResponse> getExpoInfo(@PathParam("expo-id")Long expoId) {
+    public ResponseEntity<ExpoInfoResponse> getExpoInfo(@PathVariable("expo-id")Long expoId) {
         ExpoInfoResponse response = expoInfoService.getExpoInfo(expoId);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/admin/{admin-id}")
-    public ResponseEntity<AdminCodeInfo> getAdminCodeInfo(@PathParam("admin-id")Long adminId) {
+    public ResponseEntity<AdminCodeInfo> getAdminCodeInfo(@PathVariable("admin-id")Long adminId) {
         AdminCodeInfo response = expoInfoService.getAdminCodeInfo(adminId);
 
         return ResponseEntity.ok(response);

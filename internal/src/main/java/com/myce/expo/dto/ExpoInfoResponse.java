@@ -11,5 +11,5 @@ public class ExpoInfoResponse {
     private String location;
     private String locationDetail;
     private Long ownerMemberId;
-    List<TicketInfo> ticketInfos;
+    private List<TicketInfo> ticketInfos;
 }

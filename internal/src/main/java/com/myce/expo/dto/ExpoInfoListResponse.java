@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 public class ExpoInfoListResponse {
-    List<ExpoInfoResponse> expoInfos;
+    private final List<ExpoInfoResponse> expoInfos;
 
     public ExpoInfoListResponse() {
         expoInfos = new ArrayList<>();
