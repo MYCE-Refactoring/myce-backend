@@ -1,10 +1,10 @@
-package com.myce.internal.controller;
+package com.myce.notification.controller;
 
-import com.myce.internal.service.ExpoAdminAccessValidate;
-import com.myce.internal.dto.EnsureRequest;
-import com.myce.internal.dto.MailSendContextRequest;
-import com.myce.internal.dto.MailSendContextResponse;
-import com.myce.internal.service.NotificationInternalService;
+import com.myce.notification.service.ExpoAdminAccessValidate;
+import com.myce.notification.dto.EnsureRequest;
+import com.myce.notification.dto.MailSendContextRequest;
+import com.myce.notification.dto.MailSendContextResponse;
+import com.myce.notification.service.NotificationInternalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.myce.internal.dto;
+package com.myce.notification.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

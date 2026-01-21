@@ -1,4 +1,4 @@
-package com.myce.internal.dto;
+package com.myce.notification.dto;
 
 import com.myce.reservation.dto.RecipientInfoDto;
 import lombok.AllArgsConstructor;

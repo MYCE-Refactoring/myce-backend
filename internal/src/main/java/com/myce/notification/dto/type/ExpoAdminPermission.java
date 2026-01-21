@@ -1,4 +1,4 @@
-package com.myce.internal.dto.type;
+package com.myce.notification.dto.type;
 
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
