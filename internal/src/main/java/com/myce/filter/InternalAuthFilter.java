@@ -1,4 +1,4 @@
-package com.myce.global.filter;
+package com.myce.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

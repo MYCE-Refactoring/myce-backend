@@ -1,7 +1,7 @@
-package com.myce.internal.dto;
+package com.myce.notification.dto;
 
-import com.myce.internal.dto.type.ExpoAdminPermission;
-import com.myce.internal.dto.type.LoginType;
+import com.myce.notification.dto.type.ExpoAdminPermission;
+import com.myce.notification.dto.type.LoginType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

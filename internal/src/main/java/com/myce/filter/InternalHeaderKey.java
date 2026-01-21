@@ -1,4 +1,4 @@
-package com.myce.global.filter;
+package com.myce.filter;
 
 public final class InternalHeaderKey {
     public static final String INTERNAL_HEADER_PREFIX = "X-Internal-";
