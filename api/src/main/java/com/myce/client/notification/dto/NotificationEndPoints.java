@@ -1,7 +1,8 @@
-package com.myce.notification.component.endpoints;
+package com.myce.client.notification.dto;
 
 public class NotificationEndPoints {
 
+    public static final String EXPO_START = "/notifications/expo-started";
     public static final String EVENT_REMINDER = "/notifications/event-reminder";
     public static final String EXPO_STATUS_CHANGED = "/notifications/expo-status-changed";
     public static final String QR_ISSUED = "/notifications/qr-issued";

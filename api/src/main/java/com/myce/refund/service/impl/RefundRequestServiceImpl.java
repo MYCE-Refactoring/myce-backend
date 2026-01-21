@@ -5,8 +5,8 @@ import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.common.exception.CustomException;
 import com.myce.common.exception.CustomErrorCode;
-import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.member.dto.MileageUpdateRequest;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.ReservationPaymentInfo;
@@ -52,7 +52,7 @@ public class RefundRequestServiceImpl implements RefundRequestService {
     private final TicketRepository ticketRepository;
 
 
-    private final ExpoNotificationComponent expoNotificationComponent;
+    private final NotificationService notificationService;
 
 
     @Override
@@ -84,7 +84,7 @@ public class RefundRequestServiceImpl implements RefundRequestService {
 
         ExpoStatus newStatus = expo.getStatus();
 
-        expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+        notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
         
         // 7. 환불 엔티티 생성 및 저장
         Refund refund = Refund.builder()

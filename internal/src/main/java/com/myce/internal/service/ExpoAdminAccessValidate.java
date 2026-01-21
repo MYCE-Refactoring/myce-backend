@@ -65,29 +65,29 @@ public class ExpoAdminAccessValidate {
 
     private void expoAdminValidate(Long ownerId, Long expoId, Long memberId, LoginType loginType, ExpoAdminPermission permission) {
 
-        //if로
-        switch (loginType) {
-            case MEMBER -> {
-                if (!memberId.equals(ownerId)) {
-                    throw new CustomException(CustomErrorCode.EXPO_ACCESS_DENIED);
-                }
+        if (loginType == LoginType.MEMBER) {
+            if (!memberId.equals(ownerId)) {
+                throw new CustomException(CustomErrorCode.EXPO_ACCESS_DENIED);
             }
-            case ADMIN_CODE -> {
-                AdminPermission adminPermission = adminPermissionRepository.findByAdminCodeIdAndAdminCodeExpoId(memberId, expoId)
-                        .orElseThrow(()-> new CustomException(CustomErrorCode.EXPO_ADMIN_PERMISSION_DENIED));
+        }
+        else if (loginType == LoginType.ADMIN_CODE) {
+            AdminPermission adminPermission = adminPermissionRepository.findByAdminCodeIdAndAdminCodeExpoId(memberId, expoId)
+                    .orElseThrow(()-> new CustomException(CustomErrorCode.EXPO_ADMIN_PERMISSION_DENIED));
 
-                boolean allowed = switch (permission) {
-                    case RESERVER_LIST_VIEW -> adminPermission.getIsReserverListView();
-                    case PAYMENT_VIEW -> adminPermission.getIsPaymentView();
-                    case EMAIL_LOG_VIEW -> adminPermission.getIsEmailLogView();
-                    case INQUIRY_VIEW -> adminPermission.getIsInquiryView();
-                    case EXPO_DETAIL_UPDATE -> adminPermission.getIsExpoDetailUpdate();
-                    default -> throw new CustomException(CustomErrorCode.INVALID_EXPO_ADMIN_PERMISSION_TYPE);
-                };
-                if (!allowed) {
-                    throw new CustomException(CustomErrorCode.EXPO_ADMIN_PERMISSION_DENIED);
-                }
+            boolean allowed = switch (permission) {
+                case RESERVER_LIST_VIEW -> adminPermission.getIsReserverListView();
+                case PAYMENT_VIEW -> adminPermission.getIsPaymentView();
+                case EMAIL_LOG_VIEW -> adminPermission.getIsEmailLogView();
+                case INQUIRY_VIEW -> adminPermission.getIsInquiryView();
+                case EXPO_DETAIL_UPDATE -> adminPermission.getIsExpoDetailUpdate();
+                default -> throw new CustomException(CustomErrorCode.INVALID_EXPO_ADMIN_PERMISSION_TYPE);
+            };
+            if (!allowed) {
+                throw new CustomException(CustomErrorCode.EXPO_ADMIN_PERMISSION_DENIED);
             }
+        }
+        else {
+            throw new CustomException(CustomErrorCode.INVALID_LOGIN_TYPE);
         }
     }
 }

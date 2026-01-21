@@ -1,4 +1,4 @@
-package com.myce.restclient.config;
+package com.myce.client.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -6,9 +6,9 @@ import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.service.info.ExpoStatusService;
-import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.member.entity.Member;
 import com.myce.member.repository.MemberRepository;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.settlement.entity.Settlement;
 import com.myce.settlement.repository.SettlementRepository;
 import com.myce.settlement.service.SettlementPlatformAdminService;
@@ -31,7 +31,7 @@ public class SettlementPlatformAdminServiceImpl implements SettlementPlatformAdm
     private final SettlementRepository settlementRepository;
     private final ExpoRepository expoRepository;
     private final MemberRepository memberRepository;
-    private final ExpoNotificationComponent expoNotificationComponent;
+    private final NotificationService notificationService;
     private final ExpoStatusService expoStatusService;
     
     @Override
@@ -72,7 +72,7 @@ public class SettlementPlatformAdminServiceImpl implements SettlementPlatformAdm
         expo.approveSettlement();
         ExpoStatus newStatus = expo.getStatus();
 
-        expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+        notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
 
         log.info("Settlement approval completed - expoId: {}, adminMemberId: {}, settlementId: {}", 
                 expoId, adminMember.getId(), settlement.getId());

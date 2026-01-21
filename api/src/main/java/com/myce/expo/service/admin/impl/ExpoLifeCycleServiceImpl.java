@@ -15,12 +15,12 @@ import com.myce.expo.repository.AdminPermissionRepository;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
 import com.myce.expo.service.admin.ExpoLifeCycleService;
-import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.member.dto.expo.*;
 import com.myce.member.entity.Member;
 import com.myce.member.entity.type.Role;
 import com.myce.member.mapper.expo.*;
 import com.myce.member.repository.MemberRepository;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.payment.entity.ExpoPaymentInfo;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.Refund;
@@ -72,7 +72,7 @@ public class ExpoLifeCycleServiceImpl implements ExpoLifeCycleService {
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
 
-    private final ExpoNotificationComponent expoNotificationComponent;
+    private final NotificationService notificationService;
 
     @Override
     public Page<MemberExpoResponse> getMemberExpos(Long memberId, Pageable pageable) {
@@ -143,7 +143,7 @@ public class ExpoLifeCycleServiceImpl implements ExpoLifeCycleService {
 
         ExpoStatus newStatus = expo.getStatus();
 
-        expoNotificationComponent.notifyExpoStatusChange(
+        notificationService.notifyExpoStatusChange(
                 expo,
                 oldStatus,
                 newStatus
@@ -363,7 +363,7 @@ public class ExpoLifeCycleServiceImpl implements ExpoLifeCycleService {
 
         ExpoStatus newStatus = expo.getStatus();
 
-        expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+        notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
     }
 
     /**

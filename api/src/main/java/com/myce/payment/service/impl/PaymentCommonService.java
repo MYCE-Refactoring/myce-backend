@@ -3,12 +3,12 @@ package com.myce.payment.service.impl;
 import com.myce.member.dto.MileageUpdateRequest;
 import com.myce.member.service.MemberGradeService;
 import com.myce.member.service.MemberMileageService;
-import com.myce.notification.component.MailSendComponent;
-import com.myce.notification.component.PaymentCompleteComponent;
+import com.myce.client.notification.service.MailSendService;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.dto.ReserverBulkSaveRequest;
 import com.myce.reservation.entity.Reservation;
-import com.myce.restclient.dto.PaymentCompleteRequest;
+import com.myce.client.notification.dto.PaymentCompleteRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,8 +23,8 @@ public class PaymentCommonService {
     private final MemberMileageService memberMileageService;
     private final MemberGradeService memberGradeService;
     private final QrCodeService qrCodeService;
-    private final PaymentCompleteComponent paymentCompleteComponent;
-    private final MailSendComponent mailSendComponent;
+    private final NotificationService notificationService;
+    private final MailSendService mailSendService;
 
     // 마일리지 처리
     public void processMileage(int usedMileage, int savedMileage, long userId)  {
@@ -65,7 +65,7 @@ public class PaymentCommonService {
                     .payAmountMessage(payAmountMessage)
                     .build();
 
-            paymentCompleteComponent.sendPaymentComplete(req);
+            notificationService.sendPaymentComplete(req);
 
             log.info("가상계좌 결제 완료 알림 발송 - 예약 ID: {}, 회원 ID: {}, 금액: {}",
                                                         reservationId, userId, payAmountMessage);
@@ -79,23 +79,7 @@ public class PaymentCommonService {
         String payAmountMessage = PAY_AMOUNT_MESSAGE_FORMAT.formatted(paidAmount);
 
         try {
-//            // 새로운 메시지 템플릿 시스템 사용
-//            MessageTemplate messageTemplate = generateMessageService.getMessageForReservationConfirmation(
-//                    reserverInfo.getName(),
-//                    reservation.getExpo().getTitle(),
-//                    reservation.getReservationCode(),
-//                    reservation.getQuantity(),
-//                    payAmountMessage,
-//                    reservation.getUserType()
-//            );
-//
-//            mailSendComponent.sendMail(
-//                    reserverInfo.getEmail(),
-//                    messageTemplate.getSubject(),
-//                    messageTemplate.getContent()
-//            );
-
-            mailSendComponent.sendConfirmMail(reserverInfo.getEmail(),
+            mailSendService.sendConfirmMail(reserverInfo.getEmail(),
                     reserverInfo.getName(),
                     reservation.getExpo().getTitle(),
                     reservation.getReservationCode(),

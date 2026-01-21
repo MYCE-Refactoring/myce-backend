@@ -1,4 +1,4 @@
-package com.myce.notification.dto;
+package com.myce.client.notification.dto;
 
 import com.myce.expo.entity.type.ExpoStatus;
 import lombok.Builder;

@@ -13,8 +13,8 @@ import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.service.info.ExpoStatusService;
 import com.myce.expo.service.platform.PlatformExpoManageService;
 import com.myce.expo.service.platform.mapper.ExpoPaymentInfoMapper;
-import com.myce.notification.component.ExpoNotificationComponent;
 import com.myce.expo.service.platform.mapper.RejectInfoMapper;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.payment.entity.ExpoPaymentInfo;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.Refund;
@@ -78,7 +78,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
     private final TicketRepository ticketRepository;
     private final ExpoStatusService expoStatusService;
 
-    private final ExpoNotificationComponent expoNotificationComponent;
+    private final NotificationService notificationService;
     /**
      * 박람회 신청 승인 처리
      * - 박람회 상태를 PENDING_APPROVAL -> PENDING_PAYMENT로 변경
@@ -124,7 +124,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
         expo.approve();
         ExpoStatus newStatus = expo.getStatus();
 
-        expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+        notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
         
         log.info("박람회 신청 승인 완료 - expoId: {}, totalAmount: {}", expoId, totalAmount);
     }
@@ -159,7 +159,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
         ExpoStatus oldStatus = expo.getStatus();
         expo.reject();
         ExpoStatus newStatus = expo.getStatus();
-        expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+        notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
 
         
         log.info("박람회 신청 거절 완료 - expoId: {}", expoId);
@@ -206,7 +206,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
             ExpoStatus oldStatus = expo.getStatus();
             expo.approveCancellation();
             ExpoStatus newStatus = expo.getStatus();
-            expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+            notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
 
             // 결제 정보 상태를 PARTIAL_REFUNDED로 변경 (개별 예약자 환불이 있었으므로)
             paymentInfo.setStatus(PaymentStatus.PARTIAL_REFUNDED);
@@ -222,7 +222,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
             ExpoStatus oldStatus = expo.getStatus();
             expo.approveCancellation();
             ExpoStatus newStatus = expo.getStatus();
-            expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+            notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
             
             // 결제 정보 상태 변경 (SUCCESS -> REFUNDED)
             paymentInfo.setStatus(PaymentStatus.REFUNDED);

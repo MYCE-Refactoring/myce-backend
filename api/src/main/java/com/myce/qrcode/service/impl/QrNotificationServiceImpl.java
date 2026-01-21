@@ -1,7 +1,7 @@
 package com.myce.qrcode.service.impl;
 
-import com.myce.notification.component.MailSendComponent;
-import com.myce.notification.component.MemberNotificationComponent;
+import com.myce.client.notification.service.MailSendService;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.qrcode.service.QrNotificationService;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.Reserver;
@@ -18,8 +18,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class QrNotificationServiceImpl implements QrNotificationService {
 
-    private final MemberNotificationComponent memberNotificationComponent;
-    private final MailSendComponent mailSendComponent;
+    private final NotificationService notificationService;
+    private final MailSendService mailSendService;
 
     @Override
     public void sendQrIssuedNotification(Reserver reserver, boolean isReissue) {
@@ -32,7 +32,7 @@ public class QrNotificationServiceImpl implements QrNotificationService {
 
             if (reservation.getUserType() == UserType.MEMBER) {
                 // 회원: 사이트 내 알림 + SSE 전송
-                memberNotificationComponent.sendMemberNotification(memberId, reservationId, expoTitle, isReissue);
+                notificationService.sendQrIssuedNotification(memberId, reservationId, expoTitle, isReissue);
             } else {
                 // 비회원: 이메일 알림
                 sendGuestEmailNotification(reserver, reservation, expoTitle, isReissue);
@@ -71,7 +71,7 @@ public class QrNotificationServiceImpl implements QrNotificationService {
                 reservation.getReservationCode()
         );
 
-        mailSendComponent.sendSupportMail(reserver.getEmail(), subject, body);
+        mailSendService.sendSupportMail(reserver.getEmail(), subject, body);
         log.info("비회원 QR {} 이메일 알림 전송 완료 - 예약자 ID: {}, 이메일: {}",
                 isReissue ? "재발급" : "발급", reserver.getId(), reserver.getEmail());
     }

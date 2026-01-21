@@ -1,4 +1,4 @@
-package com.myce.notification.dto;
+package com.myce.client.notification.dto;
 
 import com.myce.advertisement.entity.type.AdvertisementStatus;
 import lombok.Builder;

@@ -23,10 +23,20 @@ public class ExpoAdminAccessValidate {
     private final ExpoRepository expoRepository;
     private final AdminPermissionRepository adminPermissionRepository;
 
+    public void ensureViewable(Long expoId, Long memberId, LoginType loginType, ExpoAdminPermission permission) {
+        ensureExpoStatus(expoId, memberId, loginType, permission,
+                ExpoStatus.ADMIN_VIEWABLE_STATUSES, CustomErrorCode.EXPO_ACCESS_DENIED);
+    }
+
+    public void ensureEditable(Long expoId, Long memberId, LoginType loginType, ExpoAdminPermission permission) {
+        ensureExpoStatus(expoId, memberId, loginType, permission,
+                ExpoStatus.ADMIN_EDITABLE_STATUSES, CustomErrorCode.EXPO_EDIT_DENIED);
+    }
+
     //PUT, POST, DELETE 등의 메소드에서 사용 : 편집 권한 검증
-    public void ensureExpoStatus(Long expoId, Long memberId, LoginType loginType,
-                                 ExpoAdminPermission permission, List<ExpoStatus> allowedStatuses,
-                                 CustomErrorCode Code) {
+    private void ensureExpoStatus(Long expoId, Long memberId, LoginType loginType,
+                                  ExpoAdminPermission permission, List<ExpoStatus> allowedStatuses,
+                                  CustomErrorCode Code) {
         //기본 유효성 검사
         if (memberId == null || loginType == null) {
             throw new CustomException(CustomErrorCode.MEMBER_NOT_EXIST);
@@ -39,6 +49,8 @@ public class ExpoAdminAccessValidate {
         Expo expo = expoRepository.findById(expoId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.EXPO_NOT_EXIST));
 
+        Long ownerId = expo.getMember().getId();
+
         //해당 엑스포의 상태가 조회 가능한 상태인지 확인
         ExpoStatus status = expo.getStatus();
 
@@ -47,42 +59,34 @@ public class ExpoAdminAccessValidate {
         }
 
         //박람회 관리자가 해당 엑스포 페이지에 대한 권한이 있는지 확인
-        expoAdminValidate(expo, memberId, loginType, permission);
+        expoAdminValidate(ownerId, expoId, memberId, loginType, permission);
     }
 
-    public void ensureViewable(Long expoId, Long memberId, LoginType loginType, ExpoAdminPermission permission) {
-        ensureExpoStatus(expoId, memberId, loginType, permission,
-                ExpoStatus.ADMIN_VIEWABLE_STATUSES, CustomErrorCode.EXPO_ACCESS_DENIED);
-    }
+    private void expoAdminValidate(Long ownerId, Long expoId, Long memberId, LoginType loginType, ExpoAdminPermission permission) {
 
-    public void ensureEditable(Long expoId, Long memberId, LoginType loginType, ExpoAdminPermission permission) {
-        ensureExpoStatus(expoId, memberId, loginType, permission,
-                ExpoStatus.ADMIN_EDITABLE_STATUSES, CustomErrorCode.EXPO_EDIT_DENIED);
-    }
-
-    private void expoAdminValidate(Expo expo, Long memberId, LoginType loginType, ExpoAdminPermission permission) {
-        switch (loginType) {
-            case MEMBER -> {
-                if (!memberId.equals(expo.getMember().getId())) {
-                    throw new CustomException(CustomErrorCode.EXPO_ACCESS_DENIED);
-                }
+        if (loginType == LoginType.MEMBER) {
+            if (!memberId.equals(ownerId)) {
+                throw new CustomException(CustomErrorCode.EXPO_ACCESS_DENIED);
             }
-            case ADMIN_CODE -> {
-                AdminPermission adminPermission = adminPermissionRepository.findByAdminCodeIdAndAdminCodeExpoId(memberId, expo.getId())
-                        .orElseThrow(()-> new CustomException(CustomErrorCode.EXPO_ADMIN_PERMISSION_DENIED));
+        }
+        else if (loginType == LoginType.ADMIN_CODE) {
+            AdminPermission adminPermission = adminPermissionRepository.findByAdminCodeIdAndAdminCodeExpoId(memberId, expoId)
+                    .orElseThrow(()-> new CustomException(CustomErrorCode.EXPO_ADMIN_PERMISSION_DENIED));
 
-                boolean allowed = switch (permission) {
-                    case RESERVER_LIST_VIEW -> adminPermission.getIsReserverListView();
-                    case PAYMENT_VIEW -> adminPermission.getIsPaymentView();
-                    case EMAIL_LOG_VIEW -> adminPermission.getIsEmailLogView();
-                    case INQUIRY_VIEW -> adminPermission.getIsInquiryView();
-                    case EXPO_DETAIL_UPDATE -> adminPermission.getIsExpoDetailUpdate();
-                    default -> throw new CustomException(CustomErrorCode.INVALID_EXPO_ADMIN_PERMISSION_TYPE);
-                };
-                if (!allowed) {
-                    throw new CustomException(CustomErrorCode.EXPO_ADMIN_PERMISSION_DENIED);
-                }
+            boolean allowed = switch (permission) {
+                case RESERVER_LIST_VIEW -> adminPermission.getIsReserverListView();
+                case PAYMENT_VIEW -> adminPermission.getIsPaymentView();
+                case EMAIL_LOG_VIEW -> adminPermission.getIsEmailLogView();
+                case INQUIRY_VIEW -> adminPermission.getIsInquiryView();
+                case EXPO_DETAIL_UPDATE -> adminPermission.getIsExpoDetailUpdate();
+                default -> throw new CustomException(CustomErrorCode.INVALID_EXPO_ADMIN_PERMISSION_TYPE);
+            };
+            if (!allowed) {
+                throw new CustomException(CustomErrorCode.EXPO_ADMIN_PERMISSION_DENIED);
             }
+        }
+        else {
+            throw new CustomException(CustomErrorCode.INVALID_LOGIN_TYPE);
         }
     }
 
@@ -108,7 +112,6 @@ public class ExpoAdminAccessValidate {
                 }
             }
             case ADMIN_CODE -> {
-                // 관리 코드로 로그인한 경우, 해당 박람회의 관리 코드인지만 확인
                 if (!adminPermissionRepository.existsByAdminCodeIdAndAdminCodeExpoId(memberId, expoId)) {
                     throw new CustomException(CustomErrorCode.EXPO_ACCESS_DENIED);
                 }

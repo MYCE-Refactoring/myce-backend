@@ -6,7 +6,7 @@ import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.AdminCode;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.repository.AdminCodeRepository;
-import com.myce.notification.component.QrIssueNotifyComponent;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.qrcode.dto.QrUseResponse;
 import com.myce.qrcode.dto.QrVerifyResponse;
 import com.myce.qrcode.entity.QrCode;
@@ -20,7 +20,6 @@ import com.myce.reservation.entity.Reserver;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.UserType;
 import com.myce.reservation.repository.ReserverRepository;
-import com.myce.restclient.service.NotificationClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,9 +39,7 @@ public class QrCodeServiceImpl implements QrCodeService {
     private final QrResponseMapper qrResponseMapper;
     private final QrCodeGenerateService qrCodeGenerateService;
     private final QrNotificationService qrNotificationService;
-    private final NotificationClientService notificationClientService;
-
-    private final QrIssueNotifyComponent qrIssueNotifyComponent;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -287,7 +284,7 @@ public class QrCodeServiceImpl implements QrCodeService {
                     Long memberId = reservation.getUserId();
                     String expoTitle = reservation.getExpo().getTitle();
 
-                    qrIssueNotifyComponent.sendQrIssuedNotification(memberId, reservationId, expoTitle);
+                    notificationService.sendQrIssuedNotification(memberId, reservationId, expoTitle);
 
                     log.info("QR 발급 알림 처리 완료 - 예약 ID: {}, 회원 ID: {}", reservationId, memberId);
                 } catch (Exception e) {

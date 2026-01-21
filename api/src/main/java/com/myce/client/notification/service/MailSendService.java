@@ -1,8 +1,8 @@
-package com.myce.notification.component;
+package com.myce.client.notification.service;
 
-import com.myce.notification.component.endpoints.NotificationEndPoints;
+import com.myce.client.notification.dto.NotificationEndPoints;
 import com.myce.reservation.entity.code.UserType;
-import com.myce.restclient.service.NotificationClientService;
+import com.myce.client.notification.NotificationClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -11,9 +11,9 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class MailSendComponent {
+public class MailSendService {
 
-    private final NotificationClientService notificationClientService;
+    private final NotificationClient notificationClient;
 
     public void sendMail(String to, String subject, String content
     ) {
@@ -22,7 +22,7 @@ public class MailSendComponent {
                 "subject", subject,
                 "content", content
         );
-        notificationClientService.send(NotificationEndPoints.MAIL_SEND,body);
+        notificationClient.send(NotificationEndPoints.MAIL_SEND,body);
 
     }
     public void sendMailToMultiple(List<String> recipients, String subject, String content) {
@@ -33,7 +33,7 @@ public class MailSendComponent {
                 "content", content
 
         );
-        notificationClientService.send(NotificationEndPoints.MULTI_MAIL_SEND,body);
+        notificationClient.send(NotificationEndPoints.MULTI_MAIL_SEND,body);
     }
     public void sendSupportMail(String to, String subject, String content
     ) {
@@ -42,7 +42,7 @@ public class MailSendComponent {
                 "subject", subject,
                 "content", content
         );
-        notificationClientService.send( NotificationEndPoints.SUPPORT_MAIL_SEND,body);
+        notificationClient.send( NotificationEndPoints.SUPPORT_MAIL_SEND,body);
 
     }
 
@@ -53,7 +53,7 @@ public class MailSendComponent {
                 "code", code,
                 "limitTime", limitTime
         );
-        notificationClientService.send(NotificationEndPoints.VERIFICATION_MAIL_SEND,body);
+        notificationClient.send(NotificationEndPoints.VERIFICATION_MAIL_SEND,body);
 
     }
 
@@ -63,7 +63,7 @@ public class MailSendComponent {
                 "email", email,
                 "password", password
         );
-        notificationClientService.send(NotificationEndPoints.RESET_MAIL_SEND,body);
+        notificationClient.send(NotificationEndPoints.RESET_MAIL_SEND,body);
 
     }
 
@@ -79,7 +79,7 @@ public class MailSendComponent {
                 "paymentAmount", paymentAmount,
                 "userType", userType
         );
-        notificationClientService.send( NotificationEndPoints.RESERVATION_CONFIRM_MAIL_SEND,body);
+        notificationClient.send( NotificationEndPoints.RESERVATION_CONFIRM_MAIL_SEND,body);
 
     }
 }

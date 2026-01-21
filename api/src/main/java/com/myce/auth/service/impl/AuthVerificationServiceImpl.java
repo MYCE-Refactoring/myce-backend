@@ -9,7 +9,7 @@ import com.myce.auth.service.AuthVerificationService;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.common.util.RandomCodeGenerateUtil;
-import com.myce.notification.component.MailSendComponent;
+import com.myce.client.notification.service.MailSendService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ public class AuthVerificationServiceImpl implements AuthVerificationService {
 
     private final RandomCodeGenerateUtil randomCodeGenerateUtil;
     private final EmailVerificationRepository emailVerificationRepository;
-    private final MailSendComponent mailSendComponent;
+    private final MailSendService mailSendService;
 
     @Override
     public void sendVerificationMail(VerificationEmailRequest request) {
@@ -42,7 +42,7 @@ public class AuthVerificationServiceImpl implements AuthVerificationService {
 //                messageTemplate.getSubject(),
 //                messageTemplate.getContent()
 //                );
-        mailSendComponent.sendVerificationMail(email, verificationType.getDescription(), code,String.valueOf(LIMIT_TIME));
+        mailSendService.sendVerificationMail(email, verificationType.getDescription(), code,String.valueOf(LIMIT_TIME));
 
         log.debug("[EmailVerification-{}] Successfully sent verification email to {}", verificationType.name(), email);
         EmailVerificationInfo emailVerification = new EmailVerificationInfo(email, code, LocalDateTime.now());

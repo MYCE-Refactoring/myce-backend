@@ -1,4 +1,4 @@
-package com.myce.restclient.dto;
+package com.myce.client.notification.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
