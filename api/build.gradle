@@ -1,0 +1,60 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.4'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+bootJar { enabled = true }
+jar { enabled = false }
+
+dependencies {
+	// Spring AI BOM - use M6 (latest with Bedrock Converse support)
+	implementation project(':domain')
+	implementation platform('org.springframework.ai:spring-ai-bom:1.0.0-M6')
+
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework:spring-webflux'
+    implementation 'com.google.zxing:core:3.5.3' // QR코드 생성 라이브러리
+	implementation 'com.google.zxing:javase:3.5.3' // QR코드 생성
+	implementation platform("software.amazon.awssdk:bom:2.29.29")  // Spring Boot 3.4.x 호환 버전
+	implementation "software.amazon.awssdk:s3"
+	implementation "software.amazon.awssdk:ssm"  // AWS Systems Manager Parameter Store
+	implementation "software.amazon.awssdk:bedrockruntime"
+	
+	// Spring AI dependencies - Bedrock Converse API for Nova models  
+	implementation 'org.springframework.ai:spring-ai-bedrock-converse-spring-boot-starter'
+	implementation 'org.springframework.ai:spring-ai-core'  // Required for ChatClient
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0'
+	implementation 'org.apache.poi:poi:5.4.1' //엑셀 추출 라이브러리
+	implementation 'org.apache.poi:poi-ooxml:5.4.1' //.xlsx API 포함
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
+	annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
+	annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+	annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+
+tasks.named('test') {
+	enabled = false
+}

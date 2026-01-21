@@ -1,0 +1,27 @@
+spring:
+  datasource: # MySQL
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER_CLASS_NAME}
+    hikari: # MySQL process mgmt
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-timeout: 20000
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+    redis:
+      url: ${REDIS_URL}
+      repositories:
+        enabled: false  # Disable Redis repository auto-configuration (using RedisTemplate only)
+
+
+  jpa:
+    hibernate:
+      ddl-auto: none # in development (auto table create/modify)
+      # ddl-auto: none  # in operation (manual sql management)
+    show-sql: true
