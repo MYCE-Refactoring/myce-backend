@@ -70,7 +70,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 return new CustomException(CustomErrorCode.MEMBER_NOT_EXIST);
             });
 
-        // 플랫폼 채팅방 자동 생성
+        //  플랫폼 채팅방 자동 생성
         stateManager.ensurePlatformRoomExists(memberId, currentMember.getName());
 
         // ChatRoomQueryService로 위임

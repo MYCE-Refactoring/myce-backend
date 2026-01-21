@@ -2,6 +2,7 @@ package com.myce.payment.service;
 
 import com.myce.payment.dto.PaymentVerifyResponse;
 import com.myce.payment.dto.ReservationPaymentVerifyRequest;
+import com.myce.reservation.dto.PreReservationCacheDto;
 
 public interface ReservationPaymentService {
     
@@ -16,10 +17,12 @@ public interface ReservationPaymentService {
      * - QR 코드 생성
      * 모든 작업을 하나의 트랜잭션으로 처리
      */
-    PaymentVerifyResponse verifyAndCompleteReservationPayment(ReservationPaymentVerifyRequest request);
+    PaymentVerifyResponse verifyAndCompleteReservationPayment(ReservationPaymentVerifyRequest request,
+                                                              PreReservationCacheDto cacheDto);
     
     /**
      * 가상계좌 박람회 예약 결제 검증 및 처리
      */
-    PaymentVerifyResponse verifyAndPendingVbankReservationPayment(ReservationPaymentVerifyRequest request);
+    PaymentVerifyResponse verifyAndPendingVbankReservationPayment(ReservationPaymentVerifyRequest request,
+                                                                  PreReservationCacheDto cacheDto);
 }

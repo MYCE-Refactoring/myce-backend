@@ -1,0 +1,123 @@
+package com.myce.payment.repository.controller;
+
+import com.myce.common.exception.CustomErrorCode;
+import com.myce.common.exception.CustomException;
+import com.myce.payment.dto.*;
+import com.myce.payment.service.PaymentService;
+import com.myce.payment.service.ReservationPaymentService;
+import com.myce.payment.service.refund.PaymentRefundService;
+import com.myce.reservation.dto.PreReservationCacheDto;
+//import com.myce.reservation.repository.PreReservationRepository;
+import com.myce.payment.component.PaymentDataPreparationComponent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/payment")
+@RequiredArgsConstructor
+@Slf4j
+public class PaymentController {
+  private final PaymentService paymentService;
+  private final PaymentRefundService paymentRefundService;
+  private final ReservationPaymentService reservationPaymentService;
+  //private final PreReservationRepository preReservationRepository; --> 이제 컴포넌트에서 처리할거임
+  private  final PaymentDataPreparationComponent preparationComponent;
+
+  // 결제 검증 API (POST 방식) -> api
+  @PostMapping("/verify")
+  public ResponseEntity<PaymentVerifyResponse> verifyPayment(
+      @RequestBody PaymentVerifyInfo request) {
+    PaymentVerifyResponse response = paymentService.verifyPayment(request);
+    return ResponseEntity.status(HttpStatus.OK).body(response);
+  }
+
+
+  // 결제 환불 API (POST 방식)
+  @PostMapping("/refund")
+  public ResponseEntity<RefundInternalResponse> refundPayment(
+          @RequestBody PaymentRefundRequest request) {
+    RefundInternalResponse response = paymentService.refundPayment(request);
+    return ResponseEntity.status(HttpStatus.OK).body(response);
+  }
+
+  // 가상계좌 확인 및 PENDING 상태 저장 API
+  @PostMapping("/verify-vbank")
+  public ResponseEntity<PaymentVerifyResponse> verifyVbankPayment(
+      @RequestBody PaymentVerifyInfo request) {
+    PaymentVerifyResponse response = paymentService.verifyVbankPayment(request);
+    return ResponseEntity.status(HttpStatus.OK).body(response);
+  }
+
+  // 포트원 웹훅 API
+  @PostMapping("/webhook")
+  public ResponseEntity<Void> portoneWebhook(@RequestBody PortOneWebhookRequest request) {
+    log.info("[포트원 웹훅]: {}", request);
+    paymentService.processWebhook(request);
+    return ResponseEntity.ok().build();
+  }
+
+  // 프론트에서 target_id, target_type을 통해 imp_uid 가져오기
+  @PostMapping("/imp-uid")
+  public ResponseEntity<String> impUid(
+      @RequestBody PaymentImpUidForRefundRequest request
+  ) {
+    String impUid = paymentRefundService.getImpUidForRefund(request);
+    return ResponseEntity.ok(impUid);
+  }
+
+  @PatchMapping("/{adId}/status")
+  public ResponseEntity<Void> updateAdPaymentInfoStatus(
+      @PathVariable Long adId, @RequestBody AdPaymentInfoStatusUpdateRequest request
+  ){
+    paymentService.updateAdPaymentInfo(adId, request.getPaymentStatus());
+    return ResponseEntity.ok().build();
+  }
+
+
+
+  // 광고 통합 환불 API
+  @PostMapping("/ad-refund")
+  public ResponseEntity<RefundInternalResponse> processAdRefund(
+          @RequestBody AdRefundRequest request) {
+    RefundInternalResponse response = paymentRefundService.processAdRefund(request);
+    return ResponseEntity.status(HttpStatus.OK).body(response);
+  }
+  
+  // 박람회 통합 결제 검증 API - 결제 검증 + 예약 처리 + 마일리지 + 등급 업데이트를 한번에 처리
+  // Controller에 Redis 조회/삭제 추가 (G1)
+  @PostMapping("/reservation/verify")
+  public ResponseEntity<PaymentVerifyResponse> verifyReservationPayment(
+      @RequestBody ReservationPaymentVerifyRequest request) {
+
+    //Component로 위임
+    PreReservationCacheDto cacheDto = preparationComponent.prepareReservationData(request.getSessionId());
+
+    PaymentVerifyResponse response = reservationPaymentService.verifyAndCompleteReservationPayment(request, cacheDto);
+
+    preparationComponent.cleanupSession(request.getSessionId());
+
+    return ResponseEntity.ok(response);
+  }
+  
+  // 박람회 가상계좌 통합 결제 검증 API
+  @PostMapping("/reservation/verify-vbank")
+  public ResponseEntity<PaymentVerifyResponse> verifyReservationVbankPayment(
+      @RequestBody ReservationPaymentVerifyRequest request) {
+
+    //Component로 위임
+    PreReservationCacheDto cacheDto =
+            preparationComponent.prepareReservationData(request.getSessionId());
+
+    PaymentVerifyResponse response =
+            reservationPaymentService.verifyAndPendingVbankReservationPayment(request, cacheDto);
+
+    preparationComponent.cleanupSession(request.getSessionId());
+
+    return ResponseEntity.ok(response);
+
+  }
+}

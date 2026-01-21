@@ -10,7 +10,7 @@ import java.util.List;
 public interface NotificationService {
     void saveNotification(Long memberId, Long targetId, String title, String content,
                           NotificationType type, NotificationTargetType targetType);
-    void sendQrIssuedNotification(Long memberId, Long reservationId, String expoTitle, boolean isReissue);
+    void sendQrIssuedNotification(Long memberId, Long reservationId, String expoTitle, boolean isReissue); //
     void sendQrIssuedNotificationByReservationId(Long reservationId);
     void sendExpoStartNotification(Long expoId);
     void sendEventHourReminderNotification(Long expoId, String eventName, String startTime);

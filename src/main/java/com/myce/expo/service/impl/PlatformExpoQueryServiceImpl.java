@@ -1,5 +1,6 @@
 package com.myce.expo.service.impl;
 
+import com.myce.client.payment.service.RefundInternalService;
 import com.myce.common.dto.PageResponse;
 import com.myce.common.entity.BusinessProfile;
 import com.myce.common.entity.type.TargetType;
@@ -22,14 +23,11 @@ import com.myce.member.dto.expo.ExpoPaymentDetailResponse;
 import com.myce.member.dto.expo.ExpoRefundReceiptResponse;
 import com.myce.member.mapper.expo.ExpoPaymentDetailMapper;
 import com.myce.member.mapper.expo.ExpoRefundReceiptMapper;
+import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.ExpoPaymentInfo;
-import com.myce.payment.entity.Payment;
-import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.repository.ExpoPaymentInfoRepository;
-import com.myce.payment.repository.PaymentRepository;
-import com.myce.payment.repository.RefundRepository;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.ReservationStatus;
@@ -65,8 +63,7 @@ public class PlatformExpoQueryServiceImpl implements PlatformExpoQueryService {
     private final BusinessProfileRepository businessProfileRepository;
     private final ExpoPaymentInfoRepository expoPaymentInfoRepository;
     private final RejectInfoRepository rejectInfoRepository;
-    private final PaymentRepository paymentRepository;
-    private final RefundRepository refundRepository;
+    private final RefundInternalService refundInternalService;
     private final ExpoPaymentDetailMapper expoPaymentDetailMapper;
     private final ExpoRefundReceiptMapper expoRefundReceiptMapper;
     
@@ -181,21 +178,11 @@ public class PlatformExpoQueryServiceImpl implements PlatformExpoQueryService {
         ExpoPaymentInfo expoPaymentInfo = expoPaymentInfoRepository.findByExpoId(expoId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
         
-        // 4. 박람회 주최자 환불 정보 조회
-        Payment expoPayment = paymentRepository.findByTargetIdAndTargetType(expoId, PaymentTargetType.EXPO)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
-        
-        // 원래 환불 신청 정보 조회 (가장 처음 신청된 것)
-        List<Refund> refunds = refundRepository.findAll().stream()
-                .filter(refund -> refund.getPayment().equals(expoPayment))
-                .sorted((r1, r2) -> r1.getCreatedAt().compareTo(r2.getCreatedAt())) // 생성일 오름차순
-                .toList();
-        
-        if (refunds.isEmpty()) {
-            throw new CustomException(CustomErrorCode.REFUND_NOT_FOUND);
-        }
-        
-        Refund expoRefund = refunds.get(0); // 원래 환불 신청 정보 사용
+        // 4. 박람회 주최자 환불 정보 조회 (payment internal)
+        //    - Refund 원장은 payment 서비스가 관리
+        //    - core는 조회 응답만 받아서 화면 구성
+        RefundInternalResponse expoRefund = refundInternalService.getRefundByTarget(
+                PaymentTargetType.EXPO, expoId);
         
         // 5. 개별 예약자 정보 조회
         List<Reservation> reservations = reservationRepository.findByExpoId(expoId);
@@ -245,13 +232,19 @@ public class PlatformExpoQueryServiceImpl implements PlatformExpoQueryService {
         }
         
         // 7. 환불 날짜 포맷팅
-        String refundRequestDate = expoRefund.getRefundedAt() != null ? 
-                expoRefund.getRefundedAt().toLocalDate().toString() : 
-                expoRefund.getCreatedAt().toLocalDate().toString();
+        String refundRequestDate = expoRefund.getRefundedAt() != null
+                ? expoRefund.getRefundedAt().toLocalDate().toString()
+                : expoRefund.getRequestedAt() != null
+                    ? expoRefund.getRequestedAt().toLocalDate().toString()
+                    : LocalDate.now().toString();
         
         // 8. 응답 DTO 구성 (Mapper 사용)
-        Integer usedAmount = expoRefund.getIsPartial() ? calculateUsedAmount(expo, expoPaymentInfo) : 0;
-        Integer usedDays = expoRefund.getIsPartial() ? calculateUsedDays(expo) : 0;
+        Integer usedAmount = Boolean.TRUE.equals(expoRefund.getIsPartial())
+                ? calculateUsedAmount(expo, expoPaymentInfo)
+                : 0;
+        Integer usedDays = Boolean.TRUE.equals(expoRefund.getIsPartial())
+                ? calculateUsedDays(expo)
+                : 0;
         
         ExpoCancelDetailResponse response = ExpoCancelDetailMapper.toResponse(
                 expo,

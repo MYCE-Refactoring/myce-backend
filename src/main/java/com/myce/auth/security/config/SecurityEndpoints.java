@@ -55,11 +55,13 @@ public final class SecurityEndpoints {
             "/api/platform/ads/*/status",
     };
 
+
     // ===== DELETE 요청 허용 엔드포인트 =====
     public static final String[] DELETE_PERMIT_ALL = {
             "/api/reservations/**",
             "/api/reservations/*",
     };
+
 
     // ===== 기타 요청 허용 엔드포인트 (Swagger, Actuator, WebSocket 등) =====
     public static final String[] ETC_PERMIT_ALL = {

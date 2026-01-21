@@ -1,5 +1,6 @@
 package com.myce.member.service.impl;
 
+import com.myce.client.payment.service.RefundInternalService;
 import com.myce.common.entity.BusinessProfile;
 import com.myce.common.entity.type.TargetType;
 import com.myce.common.exception.CustomErrorCode;
@@ -32,14 +33,11 @@ import com.myce.member.mapper.expo.MemberExpoMapper;
 import com.myce.member.repository.MemberRepository;
 import com.myce.member.service.MemberExpoService;
 import com.myce.notification.service.NotificationService;
+import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.ExpoPaymentInfo;
-import com.myce.payment.entity.Payment;
-import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.repository.ExpoPaymentInfoRepository;
-import com.myce.payment.repository.PaymentRepository;
-import com.myce.payment.repository.RefundRepository;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.ReservationStatus;
 import com.myce.reservation.repository.ReservationRepository;
@@ -78,10 +76,9 @@ public class MemberExpoServiceImpl implements MemberExpoService {
     private final SettlementRepository settlementRepository;
     private final MemberRepository memberRepository;
     private final AdminPermissionRepository adminPermissionRepository;
-    private final RefundRepository refundRepository;
-    private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
     private final NotificationService notificationService;
+    private final RefundInternalService refundInternalService;
 
     @Override
     public Page<MemberExpoResponse> getMemberExpos(Long memberId, Pageable pageable) {
@@ -261,28 +258,24 @@ public class MemberExpoServiceImpl implements MemberExpoService {
         ExpoPaymentInfo expoPaymentInfo = expoPaymentInfoRepository.findByExpoId(expoId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
 
-        // PENDING_CANCEL 상태인 경우 Refund 테이블 데이터 사용
+        // PENDING_CANCEL 상태인 경우 payment internal 환불 데이터 사용
         if (expo.getStatus() == ExpoStatus.PENDING_CANCEL) {
-            log.info("PENDING_CANCEL 상태 감지 - expoId: {}, 새로운 Refund 로직 사용", expoId);
-            
-            // Payment 조회
-            Payment payment = paymentRepository.findByTargetIdAndTargetType(expoId, PaymentTargetType.EXPO)
-                    .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
-            
-            // Refund 조회
-            Refund refund = refundRepository.findByPayment(payment)
-                    .orElseThrow(() -> new CustomException(CustomErrorCode.REFUND_NOT_FOUND));
-            
-            log.info("Refund 데이터 - amount: {}, isPartial: {}", refund.getAmount(), refund.getIsPartial());
-            
-            return expoRefundReceiptMapper.toRefundReceiptWithRefundData(expo, businessProfile, expoPaymentInfo, refund);
+            log.info("PENDING_CANCEL 상태 감지 - expoId: {}, internal refund 조회 사용", expoId);
+
+            // payment internal에서 환불 정보 조회
+            RefundInternalResponse refund = refundInternalService.getRefundByTarget(
+                    PaymentTargetType.EXPO, expoId);
+
+            return expoRefundReceiptMapper.toRefundReceiptWithRefundData(
+                    expo, businessProfile, expoPaymentInfo, refund);
         }
-        
+
+
         log.info("기존 로직 사용 - expoId: {}, status: {}", expoId, expo.getStatus());
 
         return expoRefundReceiptMapper.toRefundReceiptDto(expo, businessProfile, expoPaymentInfo);
     }
-    
+
     @Override
     public ExpoRefundReceiptResponse getExpoRefundHistory(Long memberId, Long expoId) {
         // 박람회가 해당 회원의 것인지 확인
@@ -293,13 +286,11 @@ public class MemberExpoServiceImpl implements MemberExpoService {
             throw new CustomException(CustomErrorCode.EXPO_ACCESS_DENIED);
         }
 
-        // Payment 조회 (target_type=EXPO, target_id=expoId)
-        Payment payment = paymentRepository.findByTargetIdAndTargetType(expoId, PaymentTargetType.EXPO)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
-
-        // 실제 환불 내역 조회
-        Refund refund = refundRepository.findByPayment(payment)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.REFUND_NOT_FOUND));
+        // 환불 내역은 core DB 직접 조회 대신 payment internal에서 조회
+        // - 환불 원천 검증을 internal에서 일관되게 수행
+        // - core는 결과만 받아서 화면/응답용으로 사용
+        RefundInternalResponse refund = refundInternalService.getRefundByTarget(
+                PaymentTargetType.EXPO, expoId);
 
         // 박람회 결제 정보 조회
         ExpoPaymentInfo expoPaymentInfo = expoPaymentInfoRepository.findByExpoId(expoId)

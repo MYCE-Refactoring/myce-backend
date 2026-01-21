@@ -5,19 +5,19 @@ import com.myce.advertisement.entity.Advertisement;
 import com.myce.advertisement.repository.AdRepository;
 import com.myce.advertisement.service.PlatformApplyAdService;
 import com.myce.advertisement.service.mapper.AdInfoMapper;
+import com.myce.client.payment.service.RefundInternalService;
 import com.myce.common.entity.RejectInfo;
 import com.myce.common.entity.type.TargetType;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.common.repository.RejectInfoRepository;
+import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.AdPaymentInfo;
 import com.myce.payment.entity.Payment;
-import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.repository.AdPaymentInfoRepository;
 import com.myce.payment.repository.PaymentRepository;
-import com.myce.payment.repository.RefundRepository;
 import com.myce.system.entity.AdFeeSetting;
 import com.myce.system.repository.AdFeeSettingRepository;
 import com.myce.notification.service.NotificationService;
@@ -36,7 +36,7 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
     private final RejectInfoRepository rejectInfoRepository;
     private final AdPaymentInfoRepository adPaymentInfoRepository;
     private final PaymentRepository paymentRepository;
-    private final RefundRepository refundRepository;
+    private final RefundInternalService refundInternalService;
     private final AdFeeSettingRepository adFeeSettingRepository;
     private final NotificationService notificationService;
 
@@ -147,9 +147,9 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
         Payment payment = paymentRepository
                 .findByTargetIdAndTargetType(adId, PaymentTargetType.AD)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
-        Refund refund = refundRepository
-                .findByPayment(payment)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.REFUND_NOT_FOUND));
+        // 환불 정보는 payment internal에서 조회 (core DB 직접 조회 제거)
+        RefundInternalResponse refund = refundInternalService.getRefundByTarget(
+                PaymentTargetType.AD, adId);
         log.info("getCancelHistory - Advertisement : {}", advertisement);
         return AdInfoMapper.getAdCancelInfoResponse(advertisement, payment, refund);
     }

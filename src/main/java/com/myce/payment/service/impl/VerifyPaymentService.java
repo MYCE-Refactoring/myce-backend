@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+
+// TODO 이거 payment서비스에 그냥 넣어버리기
 public class VerifyPaymentService {
 
     public void verifyPaymentDetails(Map<String, Object> portOnePayment,
@@ -29,6 +31,7 @@ public class VerifyPaymentService {
         }
     }
 
+    // TODO 가상계좌 일반 계좌 -> status 부분 check -> 가상계좌 뿐만아니라 카드랑 계좌 가상계좌까지
     public void verifyVbankDetails(Map<String, Object> portOnePayment, int amount, String uid) {
         String status = (String) portOnePayment.get("status");
         Integer paidAmount = (Integer) portOnePayment.get("amount");

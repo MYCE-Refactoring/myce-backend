@@ -60,31 +60,35 @@ public class PaymentVerificationServiceImpl implements PaymentVerificationServic
     @Override
     @Transactional
     public PaymentVerifyResponse verifyPayment(PaymentVerifyInfo verifyInfo) {
-        // 결제 정보 검증
+        // 결제 정보 검증 -> 결제 정보 조회
         Map<String, Object> portOnePayment = portOneApiService.getPaymentInfo(verifyInfo.getImpUid());
+        // 금액 검증
         verifyPaymentService.verifyPaymentDetails(portOnePayment, verifyInfo.getAmount(), verifyInfo.getMerchantUid());
-
+        // 사용자 식별
         UserIdentifier userIdentifier = identifyUser(verifyInfo.getTargetType(), verifyInfo.getTargetId());
         if(userIdentifier == null) throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
-
+        // Payment 저장
         Payment payment = savePayment(portOnePayment, verifyInfo);
+        // PaymentInfo 저장
         PaymentInfoDetailDto paymentInfo = savePaymentInfoDetails(verifyInfo, PaymentStatus.SUCCESS, userIdentifier);
         return paymentMapper.toPaymentVerifyResponse(payment, paymentInfo);
     }
 
-    // 가상계좌 발급 및 상태 저장 PENDING
+    // 가상계좌 발급 및 상태 저장 PENDING - 얘가 redis 씀
     @Override
     @Transactional
     public PaymentVerifyResponse verifyVbankPayment(PaymentVerifyInfo verifyInfo) {
         // 결제 정보 검증
         Map<String, Object> portOnePayment = portOneApiService.getPaymentInfo(verifyInfo.getImpUid());
         int paidAmount = verifyInfo.getAmount();
+        // 가상 계좌 검증
         verifyPaymentService.verifyVbankDetails(portOnePayment, paidAmount, verifyInfo.getMerchantUid());
 
         UserIdentifier userIdentifier = identifyUser(verifyInfo.getTargetType(), verifyInfo.getTargetId());
         Payment payment = paymentMapper.toEntity(verifyInfo, portOnePayment);
         paymentRepository.save(payment);
 
+        //paymentInfo 저장 -> pending 상태
         PaymentInfoDetailDto paymentInfo = savePaymentInfoDetails(verifyInfo, PaymentStatus.PENDING, userIdentifier);
         return paymentMapper.toPaymentVerifyResponse(payment, paymentInfo);
     }

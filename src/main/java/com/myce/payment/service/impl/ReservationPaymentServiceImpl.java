@@ -1,5 +1,6 @@
 package com.myce.payment.service.impl;
 
+import com.myce.client.payment.service.PaymentInternalService;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.Expo;
@@ -7,10 +8,7 @@ import com.myce.expo.entity.Ticket;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
 import com.myce.expo.service.TicketService;
-import com.myce.payment.dto.PaymentInfoDetailDto;
-import com.myce.payment.dto.PaymentVerifyInfo;
-import com.myce.payment.dto.PaymentVerifyResponse;
-import com.myce.payment.dto.ReservationPaymentVerifyRequest;
+import com.myce.payment.dto.*;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.payment.entity.type.PaymentMethod;
@@ -28,7 +26,6 @@ import com.myce.reservation.dto.ReserverInfo;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.ReservationStatus;
 import com.myce.reservation.entity.code.UserType;
-import com.myce.reservation.repository.PreReservationRepository;
 import com.myce.reservation.repository.ReservationRepository;
 import com.myce.reservation.service.GuestReservationService;
 import com.myce.reservation.service.ReservationService;
@@ -36,8 +33,11 @@ import com.myce.reservation.service.ReserverService;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+// import com.myce.client.payment.PaymentInternalClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,11 +46,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ReservationPaymentServiceImpl implements ReservationPaymentService {
 
-    private final PortOneApiService portOneApiService;
+    private final PortOneApiService portOneApiService;// -> 이거 이제 payment 서버에서
     private final PaymentRepository paymentRepository;
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
     private final ReservationRepository reservationRepository;
-    private final PreReservationRepository preReservationRepository;
+    // private final PreReservationRepository preReservationRepository; -> 이제 repository에서 안함(G1)
     private final ExpoRepository expoRepository;
     private final TicketRepository ticketRepository;
     private final PaymentMapper paymentMapper;
@@ -59,34 +59,57 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
     private final TicketService ticketService;
     private final PaymentCommonService paymentCommonService;
     private final GuestReservationService guestReservationService;
-    private final VerifyPaymentService verifyPaymentService;
+    private final VerifyPaymentService verifyPaymentService; //-> Payment에서
+    // private final PaymentInternalClient paymentClientService; // Payment 내부 API 호출 전담
+    private final PaymentInternalService paymentInternalClient;
 
     @Override
     @Transactional
-    public PaymentVerifyResponse verifyAndCompleteReservationPayment(ReservationPaymentVerifyRequest request) {
+    public PaymentVerifyResponse verifyAndCompleteReservationPayment(ReservationPaymentVerifyRequest request,
+                                                                     PreReservationCacheDto cacheDto) {
+                                                                                                                //cacheDto 추가
         log.info("박람회 결제 통합 처리 시작 - reservationId: {}", request.getTargetId());
-        
-        // 1. 기존 결제 검증 로직
-        Map<String, Object> portOnePayment = portOneApiService.getPaymentInfo(request.getImpUid());
-        int paidAmount = request.getAmount();
-        verifyPaymentService.verifyPaymentDetails(portOnePayment, paidAmount, request.getMerchantUid());
-        
-        // 2. Redis에서 결제 세션 검증 및 DB 저장 => Redis에서 결제 세션 검증 (세션 ID 필수)
-        String sessionId = request.getSessionId();
-        Reservation reservation = saveReservationToSessionId(sessionId);
 
+        // 2. Redis에서 결제 세션 검증 및 DB 저장 => Redis에서 결제 세션 검증 (세션 ID 필수)
+        //String sessionId = request.getSessionId(); -> sessionId 안써요~~
+        Reservation reservation = saveReservation(cacheDto); // sessionId -> cacheDto
         UserType userType = reservation.getUserType();
         long reservationId = reservation.getId();
+        int paidAmount = request.getAmount();
         
         // 3. 비회원 적립금 지급 방지
         if (userType.equals(UserType.GUEST)) request.setSavedMileage(0);
 
         try {
-            PaymentVerifyInfo verifyInfo = convertToPaymentVerifyInfo(request, reservationId);
-            // 4. Payment 엔티티 저장
-            Payment payment = savePayment(portOnePayment, verifyInfo);
-            
+            // 4. ✅ payment 서버로 내부 호출 -> internal
+            // - 포트원 검증 + Payment 저장을 payment 서버가 처리하도록 위임
+            PaymentInternalRequest internalRequest = PaymentInternalRequest.builder()
+                    .impUid(request.getImpUid())
+                    .merchantUid(request.getMerchantUid())
+                    .amount(request.getAmount())
+                    .reservationId(reservationId)
+                    .build();
+            // payment 내부 API 호출 (응답 DTO 수신) ->TODO  상태값만 체크 post랑 get 중에 DTO 바로 넘겨도 되는지 해도 상관 없는지 check -
+//            ResponseEntity<PaymentInternalResponse>  internalResponse = // http 상태값 받아올수 있다
+//                    paymentClientService.post(
+//                            //TODO API 이름
+//                            "/payment",
+//                            internalRequest,
+//                            PaymentInternalResponse.class);
+            PaymentInternalResponse body = paymentInternalClient.verifyAndSave(internalRequest);
+//            //controller -> responseentity  받을 때 여기서 상태에 따라 예외 처리 -> 상태 체크
+//            if(!internalResponse.getStatusCode().equals(HttpStatus.OK)){
+//                log.warn("payment internal 실패 - status {}",internalResponse.getStatusCode());
+//                throw new CustomException(CustomErrorCode.PAYMENT_NOT_PAID);
+//            }
+//            //body NULL 체크
+//            PaymentInternalResponse body= internalResponse.getBody();
+//            if (body == null) {
+//                throw new CustomException(CustomErrorCode.INTERNAL_SERVER_ERROR);
+//            }
+
             // 5. ReservationPaymentInfo 저장
+            PaymentVerifyInfo verifyInfo = convertToPaymentVerifyInfo(request, reservationId);
             ReservationPaymentInfo paymentInfo =
                     saveReservationPayment(verifyInfo, reservation, paidAmount, PaymentStatus.SUCCESS);
             
@@ -127,12 +150,18 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                 paymentCommonService.sendEmail(reservation, reserverInfo, paidAmount);
             }
             
-            // 13. Redis에서 결제 세션 정리
-            destroyPreReservation(sessionId, reservationId);
-            
+            // 13. Redis에서 결제 세션 정리 -> 삭제!
+
             log.info("박람회 결제 통합 처리 완료 - reservationId: {}", reservation.getId());
-            return paymentMapper.toPaymentVerifyResponse(payment,
-                    new PaymentInfoDetailDto(paymentInfo.getStatus().name(), paidAmount, reservationId));
+
+            // ✅ 응답은 payment 내부 응답 기반으로 반환
+            return PaymentVerifyResponse.builder()
+                    .impUid(body.getImpUid())
+                    .merchantUid(body.getMerchantUid())
+                    .status(paymentInfo.getStatus().name())
+                    .amount(paidAmount)
+                    .reservationId(body.getReservationId())
+                    .build();
         } catch (Exception e) {
             log.error("박람회 결제 통합 처리 실패 - 오류: {}", e.getMessage(), e);
             throw new CustomException(CustomErrorCode.PAYMENT_NOT_PAID);
@@ -141,59 +170,67 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
 
     @Override
     @Transactional
-    public PaymentVerifyResponse verifyAndPendingVbankReservationPayment(ReservationPaymentVerifyRequest request) {
+    public PaymentVerifyResponse verifyAndPendingVbankReservationPayment(ReservationPaymentVerifyRequest request,
+                                                                         PreReservationCacheDto cacheDto) {
         log.info("박람회 가상계좌 결제 통합 처리 시작 - reservationId: {}", request.getTargetId());
-        
-        // 1. 기존 가상계좌 검증 로직
-        Map<String, Object> portOnePayment = portOneApiService.getPaymentInfo(request.getImpUid());
-        int paidAmount = request.getAmount();
-        verifyPaymentService.verifyVbankDetails(portOnePayment, paidAmount, request.getMerchantUid());
-        
-        // 2. Redis에서 결제 세션 검증 및 DB 저장 => Redis에서 결제 세션 검증 (세션 ID 필수)
-        String sessionId = request.getSessionId();
-        Reservation reservation = saveReservationToSessionId(sessionId);
-        log.info("Redis 세션에서 DB 저장 완료 - reservationId: {}", reservation.getId());
 
-        UserType userType = reservation.getUserType();
+        // 1) Redis에 있던 사전 예약 데이터를 DB에 저장 -> 실제 reservationId 생성
+        Reservation reservation = saveReservation(cacheDto);
         long reservationId = reservation.getId();
-        
-        // 3. 비회원 적립금 지급 방지
-        if (userType.equals(UserType.GUEST)) request.setSavedMileage(0);
-        
+
+        // 2) 결제 금액 (요청 기준)
+        int paidAmount = request.getAmount();
+
+        // 3) 비회원 적립금 방지 (비회원은 savedMileage=0)
+        if (reservation.getUserType().equals(UserType.GUEST)) {
+            request.setSavedMileage(0);
+        }
+
         try {
-            // 4. Payment 엔티티 저장 (PENDING 상태)
-            PaymentVerifyInfo paymentRequest = convertToPaymentVerifyInfo(request, reservation.getId());
-            //TODO 넘어오는 paymentMethod 확인해서 savePayment메소드 호출하기
-            Payment payment = paymentMapper.toEntity(paymentRequest, portOnePayment);
-            paymentRepository.save(payment);
-            
-            // 5. ReservationPaymentInfo 저장 (PENDING 상태)
+            // 4) payment 내부 API 호출 (vbank 전용)
+            PaymentInternalRequest internalRequest = PaymentInternalRequest.builder()
+                    .impUid(request.getImpUid())
+                    .merchantUid(request.getMerchantUid())
+                    .amount(paidAmount)
+                    .reservationId(reservationId)
+                    .build();
+
+            PaymentInternalResponse body = paymentInternalClient.verifyAndSaveVbank(internalRequest);
+
+            // 6) 코어에서 ReservationPaymentInfo 저장 (PENDING)
+            PaymentVerifyInfo verifyInfo = convertToPaymentVerifyInfo(request, reservationId);
             ReservationPaymentInfo paymentInfo =
-                    saveReservationPayment(paymentRequest, reservation, paidAmount, PaymentStatus.PENDING);
-            
-            // 6. 예약자 정보 저장 및 비회원 Guest ID 생성
+                    saveReservationPayment(verifyInfo, reservation, paidAmount, PaymentStatus.PENDING);
+
+            // 7) 예약자 저장 (있을 때만)
             if (request.getReserverInfos() != null && !request.getReserverInfos().isEmpty()) {
-                saveReservers(reservationId, request.getReserverInfos(), userType);
+                saveReservers(reservationId, request.getReserverInfos(), reservation.getUserType());
             }
-            
-            // 7. 티켓 수량 감소
+
+            // 8) 티켓 수량 감소
             if (request.getTicketId() != null && request.getQuantity() != null) {
                 ticketService.updateRemainingQuantity(request.getTicketId(), request.getQuantity());
             }
-            
-            // 8. Redis에서 결제 세션 정리
-            destroyPreReservation(sessionId, reservationId);
-            
-            // 가상계좌는 입금 완료 시 웹훅에서 나머지 처리 (마일리지, 등급, QR 등)
-            log.info("박람회 가상계좌 결제 처리 완료 - reservationId: {}", reservation.getId());
-            return paymentMapper.toPaymentVerifyResponse(payment,
-                    new PaymentInfoDetailDto(paymentInfo.getStatus().name(), paidAmount, reservationId));
+
+            // 9) vbank는 입금 완료 시 웹훅에서 후속 처리됨
+            log.info("박람회 가상계좌 결제 처리 완료 - reservationId: {}", reservationId);
+
+            // 10) 응답 (결제는 PENDING 상태)
+            return PaymentVerifyResponse.builder()
+                    .impUid(body.getImpUid())
+                    .merchantUid(body.getMerchantUid())
+                    .status(paymentInfo.getStatus().name())  // PENDING
+                    .amount(paidAmount)
+                    .reservationId(body.getReservationId())
+                    .build();
+
         } catch (Exception e) {
-            log.error("박람회 가상계좌 결제 처리 실패 - reservationId: {}", reservation.getId(), e);
+            log.error("박람회 가상계좌 결제 처리 실패 - reservationId: {}", reservationId, e);
             throw new CustomException(CustomErrorCode.PAYMENT_NOT_READY_OR_PAID);
         }
     }
-    
+
+
     private PaymentVerifyInfo convertToPaymentVerifyInfo(
             ReservationPaymentVerifyRequest request, Long actualReservationId) {
         PaymentVerifyInfo verifyInfo = new PaymentVerifyInfo();
@@ -224,21 +261,9 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                 .build();
     }
 
-    private Reservation saveReservationToSessionId(String sessionId) {
-        if (sessionId == null) {
-            log.error("세션 ID가 제공되지 않음");
-            throw new CustomException(CustomErrorCode.PAYMENT_SESSION_EXPIRED);
-        }
-
-        // PreReservationRepositoryImpl 경로값 위에 import로 분리
-        PreReservationCacheDto reservationCacheDto = preReservationRepository.findBySessionId(sessionId);
-        if (reservationCacheDto == null) {
-            log.error("결제 세션 만료 또는 유효하지 않음 - 세션 ID: {}", sessionId);
-            throw new CustomException(CustomErrorCode.PAYMENT_SESSION_EXPIRED);
-        }
-
-        log.info("세션 ID로 Redis 조회 성공: {}", sessionId);
-        Reservation newReservation = getNewReservation(reservationCacheDto);
+    // saveReservationToSessionId() → saveReservation() 변경 -> Redis 조회 제거 및 cacheDto를 파라미터로
+    private Reservation saveReservation(PreReservationCacheDto cacheDto) {
+        Reservation newReservation = getNewReservation(cacheDto);
         return reservationRepository.save(newReservation);
     }
 
@@ -272,7 +297,6 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                     .reservationId(reservationId)
                     .reserverInfos(convertReserverInfoList(reserverInfos))
                     .build();
-
             guestReservationService.updateGuestId(guestRequest);
             log.info("비회원 Guest ID 생성 및 업데이트 완료 - reservationId: {}", reservationId);
         }
@@ -290,12 +314,5 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                         .build()).collect(java.util.stream.Collectors.toList());
     }
 
-    private void destroyPreReservation(String sessionId, long reservationId) {
-        try {
-            preReservationRepository.deleteBySessionId(sessionId);
-            log.info("Redis 세션 정리 완료 - sessionId: {}, reservationId: {}", sessionId, reservationId);
-        } catch (Exception e) {
-            log.warn("Redis 세션 정리 실패 - sessionId: {}, reservationId: {}", sessionId, reservationId, e);
-        }
-    }
+    // destroyPreReservation() 삭제
 }

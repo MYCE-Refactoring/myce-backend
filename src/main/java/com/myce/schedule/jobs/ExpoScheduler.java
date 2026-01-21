@@ -57,7 +57,6 @@ public class ExpoScheduler implements TaskScheduler {
         } else {
             log.debug("No expos to change status");
         }
-        
         log.debug("Expo publishing status management process completed");
     }
 }

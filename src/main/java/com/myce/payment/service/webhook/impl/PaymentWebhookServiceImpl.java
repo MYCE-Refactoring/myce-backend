@@ -45,11 +45,12 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     @Override
     @Transactional
     public void processWebhook(PortOneWebhookRequest request) {
+        // 포트원에서 결제 정보 재조회
         Map<String, Object> portOnePayment = portOneApiService.getPaymentInfo(request.getImpUid());
         String status = (String) portOnePayment.get(PortOneResponseKey.STATUS);
         String portOneMerchantUid = (String) portOnePayment.get(PortOneResponseKey.MERCHANT_UID);
         int paidAmount = ((Number) portOnePayment.getOrDefault(PortOneResponseKey.AMOUNT, 0)).intValue();
-
+        // status가 'paid'가 아니면 무시
         if (!PortOneStatus.PAID.equalsIgnoreCase(status)) {
             log.info("[웹훅 무시] 포트원 상태가 paid 아님. status={}", status);
             return;
@@ -57,10 +58,12 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         // 결제 시점 받아옴
         long paidAt = ((Number) portOnePayment.getOrDefault(PortOneResponseKey.PAID_AT, 0)).longValue();
+        // payment 조회
         Payment payment = paymentRepository.findByImpUid(request.getImpUid())
                 .orElseGet(() -> paymentRepository.findByMerchantUid(request.getMerchantUid())
                         .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND)));
 
+        // 결제 대상별 처리
         long targetId = payment.getTargetId();
         switch (payment.getTargetType()) {
             case RESERVATION:
