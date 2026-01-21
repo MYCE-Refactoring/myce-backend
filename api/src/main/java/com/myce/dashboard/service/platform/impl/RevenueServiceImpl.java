@@ -1,6 +1,7 @@
 package com.myce.dashboard.service.platform.impl;
 
 import com.myce.advertisement.entity.type.AdvertisementStatus;
+import com.myce.client.payment.service.RefundInternalService;
 import com.myce.dashboard.dto.platform.DashboardChartData;
 import com.myce.dashboard.dto.platform.DashboardSummary;
 import com.myce.dashboard.dto.platform.RevenueDashboardResponse;
@@ -34,7 +35,7 @@ public class RevenueServiceImpl implements RevenueService {
     private final SettlementRepository settlementRepository;
     private final ExpoPaymentInfoRepository expoPaymentInfoRepository;
     private final AdPaymentInfoRepository adPaymentInfoRepository;
-    private final RefundRepository refundRepository;
+    private final RefundInternalService refundInternalService;
 
     public RevenueDashboardResponse getSettlementDashboard(PeriodType period, Long size) {
         Long periodTime = PeriodType.getNumberOfDays(period);
@@ -153,12 +154,16 @@ public class RevenueServiceImpl implements RevenueService {
     }
 
     private long getTotalExpoRefundInPeriod(LocalDateTime startDate, LocalDateTime endDate) {
-        return Optional.ofNullable(refundRepository.sumRefundAmountByTypeAndRefundedAtBetween(PaymentTargetType.EXPO, startDate, endDate))
+        return Optional.ofNullable(refundInternalService
+                .sumRefundAmount(PaymentTargetType.EXPO, startDate.toLocalDate(), endDate.toLocalDate())
+                .getTotalAmount())
                 .orElse(0L);
     }
 
     private long getTotalAdRefundInPeriod(LocalDateTime startDate, LocalDateTime endDate) {
-        return Optional.ofNullable(refundRepository.sumRefundAmountByTypeAndRefundedAtBetween(PaymentTargetType.AD, startDate, endDate))
+        return Optional.ofNullable(refundInternalService
+                .sumRefundAmount(PaymentTargetType.AD, startDate.toLocalDate(), endDate.toLocalDate())
+                .getTotalAmount())
                 .orElse(0L);
     }
 

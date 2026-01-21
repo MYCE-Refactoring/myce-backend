@@ -55,15 +55,16 @@ public class GuestReservationServiceImpl implements GuestReservationService {
 
   // 이메일 조회로 없으면 등록, 있으면 반환
   private Guest upsertGuest(ReserverInfo info) {
-    return guestRepository.findByEmail(info.getEmail())
-        .orElseGet(() -> {
-          Guest g = new Guest();
-          g.setEmail(info.getEmail().trim());
-          g.setName(info.getName());
-          g.setPhone(info.getPhone());
-          g.setBirth(info.getBirth());
-          g.setGender(info.getGender()); // Guest 엔티티는 String 컬럼 사용
-          return guestRepository.save(g);
-        });
+      return guestRepository.findByEmail(info.getEmail())
+              .orElseGet(() -> guestRepository.save(
+                      Guest.builder()
+                              .email(info.getEmail().trim())
+                              .name(info.getName())
+                              .phone(info.getPhone())
+                              .birth(info.getBirth())
+                              .gender(info.getGender())
+                              .build()
+              ));
+
   }
 }

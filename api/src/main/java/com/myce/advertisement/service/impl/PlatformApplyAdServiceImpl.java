@@ -6,13 +6,15 @@ import com.myce.advertisement.entity.type.AdvertisementStatus;
 import com.myce.advertisement.repository.AdRepository;
 import com.myce.advertisement.service.AdStatusService;
 import com.myce.advertisement.service.PlatformApplyAdService;
-import com.myce.advertisement.service.component.AdNotificationComponent;
 import com.myce.advertisement.service.mapper.AdInfoMapper;
+import com.myce.client.notification.service.NotificationService;
+import com.myce.client.payment.service.RefundInternalService;
 import com.myce.common.entity.RejectInfo;
 import com.myce.common.entity.type.TargetType;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.common.repository.RejectInfoRepository;
+import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.AdPaymentInfo;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.Refund;
@@ -38,9 +40,9 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
     private final RejectInfoRepository rejectInfoRepository;
     private final AdPaymentInfoRepository adPaymentInfoRepository;
     private final PaymentRepository paymentRepository;
-    private final RefundRepository refundRepository;
+    private final RefundInternalService refundInternalService;;
     private final AdFeeSettingRepository adFeeSettingRepository;
-    private final AdNotificationComponent adNotificationComponent;
+    private final NotificationService notificationService;
     private final AdStatusService adStatusService;
 
     public AdPaymentInfoCheck generatePaymentCheck(Long adId) {
@@ -90,7 +92,7 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
         AdvertisementStatus oldStatus = ad.getStatus();
         ad.approve();
         AdvertisementStatus newStatus = ad.getStatus();
-        adNotificationComponent.notifyAdStatusChange(ad, oldStatus, newStatus);
+        notificationService.notifyAdStatusChange(ad, oldStatus, newStatus);
     }
 
     @Transactional
@@ -113,7 +115,7 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
         AdvertisementStatus oldStatus = ad.getStatus();
         ad.reject();
         AdvertisementStatus newStatus = ad.getStatus();
-        adNotificationComponent.notifyAdStatusChange(ad, oldStatus, newStatus);
+        notificationService.notifyAdStatusChange(ad, oldStatus, newStatus);
     }
 
     public AdRejectInfoResponse getRejectInfo(Long adId) {
@@ -144,9 +146,9 @@ public class PlatformApplyAdServiceImpl implements PlatformApplyAdService {
         Payment payment = paymentRepository
                 .findByTargetIdAndTargetType(adId, PaymentTargetType.AD)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
-        Refund refund = refundRepository
-                .findByPayment(payment)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.REFUND_NOT_FOUND));
+        // 환불 정보는 payment internal에서 조회 (core DB 직접 조회 제거)
+        RefundInternalResponse refund = refundInternalService.getRefundByTarget(
+                PaymentTargetType.AD, adId);
         log.info("getCancelHistory - Advertisement : {}", advertisement);
         return AdInfoMapper.getAdCancelInfoResponse(advertisement, payment, refund);
     }

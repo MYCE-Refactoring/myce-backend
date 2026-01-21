@@ -4,7 +4,7 @@ import com.myce.common.entity.BusinessProfile;
 import com.myce.expo.dto.ExpoCancelDetailResponse;
 import com.myce.expo.entity.Expo;
 import com.myce.payment.entity.ExpoPaymentInfo;
-import com.myce.payment.entity.Refund;
+import com.myce.payment.dto.RefundInternalResponse;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public class ExpoCancelDetailMapper {
             Expo expo,
             BusinessProfile businessProfile,
             ExpoPaymentInfo expoPaymentInfo,
-            Refund expoRefund,
+            RefundInternalResponse expoRefund,
             String refundRequestDate,
             Integer usedAmount,
             Integer usedDays,
@@ -35,18 +35,18 @@ public class ExpoCancelDetailMapper {
         
         Integer depositRefundAmount;
         Integer usageFeeRefundAmount;
-        
-        if (expoRefund.getIsPartial()) {
+
+        if (Boolean.TRUE.equals(expoRefund.getIsPartial())) {
             // 부분환불 (게시중, 기타): 등록금 환불 없음, 이용료만 환불
             depositRefundAmount = 0;
-            usageFeeRefundAmount = expoRefund.getAmount();
-        } else {
+            usageFeeRefundAmount = expoRefund.getRefundedAmount();}
+        else {
             // 전액환불 (게시대기): 등록금 + 이용료 환불
             depositRefundAmount = depositAmount;
-            usageFeeRefundAmount = expoRefund.getAmount() - depositAmount;
+            usageFeeRefundAmount = expoRefund.getRefundedAmount() - depositAmount;
         }
 
-        return ExpoCancelDetailResponse.builder()
+            return ExpoCancelDetailResponse.builder()
                 .expoTitle(expo.getTitle())
                 .applicantName(businessProfile != null ? businessProfile.getCompanyName() : 
                               expo.getMember().getName())
@@ -57,7 +57,7 @@ public class ExpoCancelDetailMapper {
                 .totalAmount(expoPaymentInfo.getTotalAmount())
                 .usedAmount(usedAmount)
                 .usedDays(usedDays)
-                .refundAmount(expoRefund.getAmount())
+                .refundAmount(expoRefund.getRefundedAmount())
                 .totalUsageFee(expoPaymentInfo.getDailyUsageFee() * expoPaymentInfo.getTotalDay())
                 .depositRefundAmount(depositRefundAmount)
                 .usageFeeRefundAmount(usageFeeRefundAmount)

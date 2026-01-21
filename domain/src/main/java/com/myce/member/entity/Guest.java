@@ -10,7 +10,6 @@ import java.time.LocalDate;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @Table(name = "guest")
 @EntityListeners(AuditingEntityListener.class)
@@ -44,13 +43,12 @@ public class Guest {
     @Column(name = "created_at", updatable = false)
     private LocalDate createdAt;
 
-    public Guest(String name, Gender gender, String email, String phone, LocalDate birth,
-                 boolean isDeleted) {
+    @Builder
+    public Guest(String name, Gender gender, String email, String phone, LocalDate birth) {
         this.name = name;
         this.gender = gender;
         this.email = email;
         this.phone = phone;
         this.birth = birth;
-        this.isDeleted = isDeleted;
     }
 }

@@ -3,6 +3,7 @@ package com.myce.advertisement.service.mapper;
 import com.myce.advertisement.dto.*;
 import com.myce.advertisement.entity.Advertisement;
 import com.myce.common.entity.RejectInfo;
+import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.AdPaymentInfo;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.Refund;
@@ -46,7 +47,7 @@ public class AdInfoMapper {
     }
 
     public static AdCancelHistoryResponse getAdCancelInfoResponse(
-            Advertisement advertisement, Payment payment, Refund refund) {
+            Advertisement advertisement, Payment payment, RefundInternalResponse refund) {
         PaymentMethod paymentMethod = payment.getPaymentMethod();
         PaymentTypeResult paymentTypeResult = getResult(payment, paymentMethod);
 
@@ -58,7 +59,7 @@ public class AdInfoMapper {
                 .paymentType(paymentMethod.name())
                 .paymentCompanyName(paymentTypeResult.paymentCompanyName())
                 .paymentAccountInfo(paymentTypeResult.paymentAccountInfo())
-                .totalAmount(refund.getAmount())
+                .totalAmount(refund.getRefundedAmount())
                 .build();
     }
 

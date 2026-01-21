@@ -7,7 +7,7 @@ import org.springframework.web.client.RestClient;
 
 @Service
 @RequiredArgsConstructor
-public class NotificationClient {
+public class NotificationInternalClient {
 
     private final RestClient notificationClient;
 

@@ -1,7 +1,10 @@
 package com.myce.client.notification.service;
 
+import com.myce.advertisement.entity.Advertisement;
+import com.myce.advertisement.entity.type.AdvertisementStatus;
+import com.myce.client.notification.dto.AdStatusChangeCommand;
 import com.myce.client.notification.dto.PaymentCompleteRequest;
-import com.myce.client.notification.NotificationClient;
+import com.myce.client.notification.NotificationInternalClient;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.client.notification.dto.NotificationEndPoints;
@@ -16,7 +19,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    private final NotificationClient notificationClient;
+    private final NotificationInternalClient notificationInternalClient;
 
     public void sendQrIssuedNotification(Long memberId, Long reservationId, String expoTitle, boolean reissue) {
 
@@ -26,13 +29,13 @@ public class NotificationService {
                 "expoTitle", expoTitle,
                 "reissue", reissue
         );
-        notificationClient.send( NotificationEndPoints.QR_ISSUED, body);
+        notificationInternalClient.send( NotificationEndPoints.QR_ISSUED, body);
     }
     public void sendQrIssuedNotification(Long memberId, Long reservationId, String expoTitle) {
         sendQrIssuedNotification(memberId, reservationId, expoTitle, false);
     }
     public void sendPaymentComplete(PaymentCompleteRequest req) {
-        notificationClient.send(NotificationEndPoints.PAYMENT_COMPLETED, req );
+        notificationInternalClient.send(NotificationEndPoints.PAYMENT_COMPLETED, req );
     }
 
     public void notifyExpoStart(List<Long> userIds, Long expoId, String expoTitle) {
@@ -45,13 +48,13 @@ public class NotificationService {
                 "expoId", expoId,
                 "expoTitle", expoTitle
         );
-        notificationClient.send(NotificationEndPoints.EXPO_START, body);
+        notificationInternalClient.send(NotificationEndPoints.EXPO_START, body);
 
     }
 
     public void notifyExpoStatusChange(Expo expo, ExpoStatus oldStatus, ExpoStatus newStatus) {
         ExpoStatusChangeCommand command =commandGenerator(expo, oldStatus, newStatus);
-        notificationClient.send( NotificationEndPoints.EXPO_STATUS_CHANGED, command);
+        notificationInternalClient.send( NotificationEndPoints.EXPO_STATUS_CHANGED, command);
 
     }
 
@@ -76,6 +79,24 @@ public class NotificationService {
                 "eventName", eventName,
                 "startTime", startTime
         );
-        notificationClient.send(NotificationEndPoints.EVENT_REMINDER,body);
+        notificationInternalClient.send(NotificationEndPoints.EVENT_REMINDER,body);
+    }
+
+    public void notifyAdStatusChange(Advertisement ad, AdvertisementStatus oldStatus, AdvertisementStatus newStatus) {
+
+        AdStatusChangeCommand command = commandGenerator(ad, oldStatus, newStatus);
+        notificationInternalClient.send("notifications/ad-status-changed", command);
+
+    }
+
+    private AdStatusChangeCommand commandGenerator(Advertisement ad, AdvertisementStatus oldStatus, AdvertisementStatus newStatus){
+
+        return AdStatusChangeCommand.builder()
+                .memberId(ad.getMember().getId())
+                .adId(ad.getId())
+                .adTitle(ad.getTitle())
+                .oldStatus(oldStatus)
+                .newStatus(newStatus)
+                .build();
     }
 }

@@ -13,5 +13,6 @@ public class NotificationEndPoints {
     public static final String VERIFICATION_MAIL_SEND = "/notifications/mail/verification";
     public static final String RESET_MAIL_SEND = "/notifications/mail/reset-password";
     public static final String RESERVATION_CONFIRM_MAIL_SEND = "/notifications/mail/reservation-confirm";
+    public static final String AD_STATUS_CHANGED = "/notifications/ad-status-changed";
 
 }

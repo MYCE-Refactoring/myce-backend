@@ -1,16 +1,11 @@
 package com.myce.payment.controller;
 
-import com.myce.payment.dto.AdPaymentInfoStatusUpdateRequest;
-import com.myce.payment.dto.PaymentImpUidForRefundRequest;
-import com.myce.payment.dto.PaymentVerifyInfo;
-import com.myce.payment.dto.PaymentVerifyResponse;
-import com.myce.payment.dto.PaymentRefundRequest;
-import com.myce.payment.dto.PortOneWebhookRequest;
-import com.myce.payment.dto.AdRefundRequest;
-import com.myce.payment.dto.ReservationPaymentVerifyRequest;
+import com.myce.payment.component.PaymentDataPreparationComponent;
+import com.myce.payment.dto.*;
 import com.myce.payment.service.PaymentService;
 import com.myce.payment.service.ReservationPaymentService;
 import com.myce.payment.service.refund.PaymentRefundService;
+import com.myce.reservation.dto.PreReservationCacheDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,6 +21,7 @@ public class PaymentController {
   private final PaymentService paymentService;
   private final PaymentRefundService paymentRefundService;
   private final ReservationPaymentService reservationPaymentService;
+  private  final PaymentDataPreparationComponent preparationComponent;
 
   // 결제 검증 API (POST 방식)
   @PostMapping("/verify")
@@ -37,9 +33,9 @@ public class PaymentController {
 
   // 결제 환불 API (POST 방식)
   @PostMapping("/refund")
-  public ResponseEntity<Map<String, Object>> refundPayment(
-      @RequestBody PaymentRefundRequest request) {
-    Map<String, Object> response = paymentService.refundPayment(request);
+  public ResponseEntity<RefundInternalResponse> refundPayment(
+          @RequestBody PaymentRefundRequest request) {
+    RefundInternalResponse response = paymentService.refundPayment(request);
     return ResponseEntity.status(HttpStatus.OK).body(response);
   }
 
@@ -78,9 +74,9 @@ public class PaymentController {
 
   // 광고 통합 환불 API - 포트원 환불 + 광고 상태 변경 + 결제 상태 변경을 한번에 처리
   @PostMapping("/ad-refund")
-  public ResponseEntity<Map<String, Object>> processAdRefund(
-      @RequestBody AdRefundRequest request) {
-    Map<String, Object> response = paymentRefundService.processAdRefund(request);
+  public ResponseEntity<RefundInternalResponse> processAdRefund(
+          @RequestBody AdRefundRequest request) {
+    RefundInternalResponse response = paymentRefundService.processAdRefund(request);
     return ResponseEntity.status(HttpStatus.OK).body(response);
   }
   
@@ -88,17 +84,25 @@ public class PaymentController {
   @PostMapping("/reservation/verify")
   public ResponseEntity<PaymentVerifyResponse> verifyReservationPayment(
       @RequestBody ReservationPaymentVerifyRequest request) {
-    log.info("박람회 통합 결제 검증 시작 - reservationId: {}", request.getTargetId());
-    PaymentVerifyResponse response = reservationPaymentService.verifyAndCompleteReservationPayment(request);
-    return ResponseEntity.status(HttpStatus.OK).body(response);
+      PreReservationCacheDto cacheDto = preparationComponent.prepareReservationData(request.getSessionId());
+
+      PaymentVerifyResponse response = reservationPaymentService.verifyAndCompleteReservationPayment(request, cacheDto);
+
+      preparationComponent.cleanupSession(request.getSessionId());
+
+      return ResponseEntity.ok(response);
   }
   
   // 박람회 가상계좌 통합 결제 검증 API
   @PostMapping("/reservation/verify-vbank")
   public ResponseEntity<PaymentVerifyResponse> verifyReservationVbankPayment(
       @RequestBody ReservationPaymentVerifyRequest request) {
-    log.info("박람회 가상계좌 통합 결제 검증 시작 - reservationId: {}", request.getTargetId());
-    PaymentVerifyResponse response = reservationPaymentService.verifyAndPendingVbankReservationPayment(request);
-    return ResponseEntity.status(HttpStatus.OK).body(response);
+    PreReservationCacheDto cacheDto = preparationComponent.prepareReservationData(request.getSessionId());
+
+    PaymentVerifyResponse response = reservationPaymentService.verifyAndCompleteReservationPayment(request, cacheDto);
+
+    preparationComponent.cleanupSession(request.getSessionId());
+
+    return ResponseEntity.ok(response);
   }
 }
