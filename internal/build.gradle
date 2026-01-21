@@ -1,0 +1,23 @@
+dependencies {
+    implementation project(':domain')
+    implementation project(':common')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+bootJar {
+    enabled = true
+}
+
+jar {
+    enabled = false
+}
+
+// IntelliJ Kotlin plugin sometimes requests this task even in pure Java projects.
+// Define a no-op to silence "prepareKotlinBuildScriptModel not found" sync errors.
+if (tasks.findByName("prepareKotlinBuildScriptModel") == null) {
+    tasks.register("prepareKotlinBuildScriptModel") {}
+}

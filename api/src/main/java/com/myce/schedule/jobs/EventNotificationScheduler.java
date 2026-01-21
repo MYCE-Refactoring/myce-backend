@@ -1,9 +1,9 @@
 package com.myce.schedule.jobs;
 
 import com.myce.expo.entity.Expo;
-import com.myce.notification.component.EventReminderComponent;
 import com.myce.expo.entity.Event;
 import com.myce.expo.repository.EventRepository;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.reservation.repository.ReservationRepository;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
@@ -29,7 +29,7 @@ public class EventNotificationScheduler implements TaskScheduler {
     private final EventRepository eventRepository;
     private final ReservationRepository reservationRepository;
 
-    private final EventReminderComponent eventReminderComponent;
+    private final NotificationService notificationService;
 
     @Value("${scheduler.event-notification:0 0,30 * * * *}")
     private String cronExpression;
@@ -95,7 +95,7 @@ public class EventNotificationScheduler implements TaskScheduler {
             List<Long> memberIds =
                     reservationRepository.findDistinctUserIdsByExpoId(expoId);
 
-            eventReminderComponent.notifyEventHourReminder(
+            notificationService.notifyEventHourReminder(
                     memberIds,
                     expoId,
                     expoTitle,

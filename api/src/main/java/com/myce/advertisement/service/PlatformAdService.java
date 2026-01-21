@@ -1,7 +1,6 @@
 package com.myce.advertisement.service;
 
 import com.myce.advertisement.dto.*;
-import com.myce.advertisement.entity.Advertisement;
 import com.myce.advertisement.entity.type.AdvertisementStatus;
 import com.myce.common.dto.PageResponse;
 

@@ -4,7 +4,7 @@ import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
-import com.myce.notification.component.QrIssueComponent;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.qrcode.repository.QrCodeRepository;
 import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.entity.Reservation;
@@ -36,7 +36,7 @@ public class ExpoQrGenerateScheduler implements TaskScheduler {
     private final QrCodeService qrCodeService;
     private final QrCodeRepository qrCodeRepository;
 
-    private final QrIssueComponent qrIssueComponent;
+    private final NotificationService notificationService;
 
     @Value("${scheduler.expo-qr-generate:0 0 0 * * *}")
     private String cronExpression;
@@ -123,7 +123,7 @@ public class ExpoQrGenerateScheduler implements TaskScheduler {
             Long memberId = reservation.getUserId();
             String expoTitle = reservation.getExpo().getTitle();
 
-            qrIssueComponent.notifyQrIssuedByReservation(memberId, reservationId, expoTitle,false);
+            notificationService.sendQrIssuedNotification(memberId, reservationId, expoTitle,false);
             notificationCount++;
         }
 

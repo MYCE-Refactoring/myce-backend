@@ -2,8 +2,8 @@ package com.myce.advertisement.service.component;
 
 import com.myce.advertisement.entity.Advertisement;
 import com.myce.advertisement.entity.type.AdvertisementStatus;
-import com.myce.notification.dto.AdStatusChangeCommand;
-import com.myce.restclient.service.NotificationClientService;
+import com.myce.client.notification.dto.AdStatusChangeCommand;
+import com.myce.client.notification.NotificationClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -11,12 +11,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AdNotificationComponent {
 
-    private final NotificationClientService notificationClientService;
+    private final NotificationClient notificationClient;
 
     public void notifyAdStatusChange(Advertisement ad, AdvertisementStatus oldStatus, AdvertisementStatus newStatus) {
 
         AdStatusChangeCommand command = commandGenerator(ad, oldStatus, newStatus);
-        notificationClientService.send("notifications/ad-status-changed", command);
+        notificationClient.send("notifications/ad-status-changed", command);
 
     }
 

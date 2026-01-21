@@ -14,7 +14,7 @@ import com.myce.member.entity.MemberGrade;
 import com.myce.member.entity.type.GradeCode;
 import com.myce.member.repository.MemberGradeRepository;
 import com.myce.member.repository.MemberRepository;
-import com.myce.notification.component.MailSendComponent;
+import com.myce.client.notification.service.MailSendService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final MemberGradeRepository memberGradeRepository;
     private final RandomCodeGenerateUtil randomCodeGenerateUtil;
-    private final MailSendComponent mailSendComponent;
+    private final MailSendService mailSendService;
 
     public void signup(SignupRequest signupRequest) {
         if(memberRepository.existsByLoginId(signupRequest.getLoginId())) {
@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
 //        MessageTemplate messageTemplate = messageTemplateService.getMessageForResetPassword(tempPassword);
 //        mailSendComponent.sendMail(request.getEmail(), messageTemplate.getSubject(), messageTemplate.getContent());
 
-        mailSendComponent.sendResetPwMail(request.getEmail(), tempPassword);
+        mailSendService.sendResetPwMail(request.getEmail(), tempPassword);
     }
 
     @Override

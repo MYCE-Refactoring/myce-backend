@@ -1,0 +1,14 @@
+dependencies {
+    api 'org.springframework.data:spring-data-commons'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+}
+
+
+bootJar { enabled = false }
+jar { enabled = true }
+
+// IntelliJ Kotlin plugin sometimes requests this task even in pure Java projects.
+// Define a no-op to silence "prepareKotlinBuildScriptModel not found" sync errors.
+if (tasks.findByName("prepareKotlinBuildScriptModel") == null) {
+    tasks.register("prepareKotlinBuildScriptModel") {}
+}

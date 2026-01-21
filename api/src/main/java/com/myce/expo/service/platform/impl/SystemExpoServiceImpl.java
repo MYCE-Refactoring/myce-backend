@@ -5,9 +5,8 @@ import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
-import com.myce.expo.service.info.ExpoStatusService;
 import com.myce.expo.service.platform.SystemExpoService;
-import com.myce.notification.component.ExpoNotificationComponent;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.settlement.service.SettlementSystemService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +24,7 @@ public class SystemExpoServiceImpl implements SystemExpoService {
     
     private final ExpoRepository expoRepository;
     private final SettlementSystemService settlementSystemService;
-
-    private final ExpoNotificationComponent expoNotificationComponent;
-
-    private final ExpoStatusService expoStatusService;
+    private final NotificationService notificationService;
     
     private static final List<ExpoStatus> ACTIVE_STATUSES = List.of(
             ExpoStatus.PUBLISHED,
@@ -65,7 +61,7 @@ public class SystemExpoServiceImpl implements SystemExpoService {
             ExpoStatus oldStatus = expo.getStatus();
             expo.publish();
             ExpoStatus newStatus = expo.getStatus();
-            expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+            notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
         }
         
         if (!pendingExpos.isEmpty()) {
@@ -90,7 +86,7 @@ public class SystemExpoServiceImpl implements SystemExpoService {
             ExpoStatus oldStatus = expo.getStatus();
             expo.complete(); // PUBLISHED → PUBLISH_ENDED
             ExpoStatus newStatus = expo.getStatus();
-            expoNotificationComponent.notifyExpoStatusChange(expo, oldStatus, newStatus);
+            notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
             
             // Settlement 자동 생성 (SettlementSystemService로 위임)
             settlementSystemService.createInitialSettlement(expo);
