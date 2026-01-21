@@ -1,6 +1,5 @@
 package com.myce.auth.security.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.auth.dto.type.LoginType;
 import jakarta.servlet.FilterChain;
@@ -8,7 +7,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final String INTERNAL_AUTH_VALUE;
-    private final String GATEWAY_AUTH_VALUE;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -31,20 +28,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.debug("[JwtAuthenticationFilter] Input uri={}, method={}", uri, method);
 
         String authValue = request.getHeader(InternalHeaderKey.INTERNAL_AUTH);
-
-        log.info("INTERNAL_AUTH={}, ROLE={}, LOGIN_TYPE={}, MEMBER_ID={}",
-                authValue,
-                request.getHeader(InternalHeaderKey.INTERNAL_ROLE),
-                request.getHeader(InternalHeaderKey.INTERNAL_LOGIN_TYPE),
-                request.getHeader(InternalHeaderKey.INTERNAL_MEMBER_ID)
-        );
-
-        if (authValue == null ||
-                (!authValue.equals(INTERNAL_AUTH_VALUE) && !authValue.equals(GATEWAY_AUTH_VALUE))) {
+        if (authValue == null || !authValue.equals(INTERNAL_AUTH_VALUE)) {
+            log.info("Not exist auth value. authValue={}", authValue);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-
 
         String role = request.getHeader(InternalHeaderKey.INTERNAL_ROLE);
         String loginTypeStr = request.getHeader(InternalHeaderKey.INTERNAL_LOGIN_TYPE);
@@ -83,15 +71,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 다음 필터로
         filterChain.doFilter(request, response);
-    }
-
-
-    private void setErrorResponse(HttpServletResponse response, String code) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-
-        Map<String, String> body = Map.of("code", code);
-        log.info("[JwtAuthenticationFilter] Set error response: {}", body);
-        new ObjectMapper().writeValue(response.getWriter(), body);
     }
 }
