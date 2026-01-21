@@ -8,7 +8,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -73,15 +72,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 다음 필터로
         filterChain.doFilter(request, response);
-    }
-
-
-    private void setErrorResponse(HttpServletResponse response, String code) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-
-        Map<String, String> body = Map.of("code", code);
-        log.info("[JwtAuthenticationFilter] Set error response: {}", body);
-        new ObjectMapper().writeValue(response.getWriter(), body);
     }
 }

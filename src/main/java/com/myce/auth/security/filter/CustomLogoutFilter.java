@@ -17,6 +17,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators.Log;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -35,20 +37,25 @@ public class CustomLogoutFilter extends GenericFilterBean {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        if(!(request.getMethod().equals("POST") && request.getRequestURI().equals("/api/auth/logout"))) {
+        if(!(request.getMethod().equals(HttpMethod.POST.name()) && request.getRequestURI().equals("/api/auth/logout"))) {
             filterChain.doFilter(request, response);
             return;
         }
 
         // accessToken 검증 및 블랙리스트 추가
-        String accessToken = request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
-        accessToken = jwtUtil.substringToken(accessToken);
-        if(accessToken == null || !jwtUtil.validateToken(accessToken)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        String role = request.getHeader(InternalHeaderKey.INTERNAL_ROLE);
+        String loginTypeStr = request.getHeader(InternalHeaderKey.INTERNAL_LOGIN_TYPE);
+        String memberIdStr = request.getHeader(InternalHeaderKey.INTERNAL_MEMBER_ID);
+        String accessToken = request.getHeader(InternalHeaderKey.INTERNAL_ACCESS_TOKEN);
+
+        if (role == null || loginTypeStr == null || memberIdStr == null || accessToken == null) {
+            log.info("Not exist user info. role={}, loginType={}, memberId={}", role, loginTypeStr, memberIdStr);
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        LoginType loginType = jwtUtil.getLoginTypeFromToken(accessToken);
-        Long memberId = jwtUtil.getMemberIdFromToken(accessToken);
+        LoginType loginType = LoginType.fromString(loginTypeStr);
+        Long memberId = Long.valueOf(memberIdStr);
 
         long time = jwtUtil.getRemainingTimeForExpiration(accessToken);
         tokenBlackListRepository.save(accessToken, time);
