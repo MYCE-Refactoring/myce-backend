@@ -53,7 +53,7 @@ public class NotificationService {
     }
 
     public void notifyExpoStatusChange(Expo expo, ExpoStatus oldStatus, ExpoStatus newStatus) {
-        ExpoStatusChangeCommand command =commandGenerator(expo, oldStatus, newStatus);
+        ExpoStatusChangeCommand command= commandGenerator(expo, oldStatus, newStatus);
         notificationInternalClient.send( NotificationEndPoints.EXPO_STATUS_CHANGED, command);
 
     }
@@ -85,7 +85,7 @@ public class NotificationService {
     public void notifyAdStatusChange(Advertisement ad, AdvertisementStatus oldStatus, AdvertisementStatus newStatus) {
 
         AdStatusChangeCommand command = commandGenerator(ad, oldStatus, newStatus);
-        notificationInternalClient.send("notifications/ad-status-changed", command);
+        notificationInternalClient.send(NotificationEndPoints.AD_STATUS_CHANGED, command);
 
     }
 

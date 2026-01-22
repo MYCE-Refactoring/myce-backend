@@ -1,5 +1,6 @@
 package com.myce.client.config;
 
+import com.myce.auth.security.filter.InternalHeaderKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +22,7 @@ public class RestClientConfig {
     public RestClient notificationClient() {
         return RestClient.builder()
                 .baseUrl(notificationBaseUrl)
-                .defaultHeader("X-Internal-Auth", externalAuthValue)
+                .defaultHeader(InternalHeaderKey.INTERNAL_AUTH, externalAuthValue)
                 .build();
     }
 
