@@ -2,7 +2,7 @@ package com.myce.advertisement.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myce.advertisement.dto.AdMainPageInfo;
-import com.myce.advertisement.service.component.AdNotificationComponent;
+import com.myce.client.notification.service.NotificationService;
 import com.myce.system.entity.AdPosition;
 import com.myce.advertisement.entity.Advertisement;
 import com.myce.advertisement.entity.type.AdvertisementStatus;
@@ -33,7 +33,7 @@ public class SystemAdServiceImpl implements SystemAdService {
     private final AdPositionRepository adPositionRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private final AdNotificationComponent adNotificationComponent;
+    private final NotificationService notificationService;
 
     public void checkAvailablePeriod(Long locationId,
                                      LocalDate startedAt, LocalDate endedAt) {
@@ -108,7 +108,7 @@ public class SystemAdServiceImpl implements SystemAdService {
             AdvertisementStatus newStatus = ad.getStatus();
             
             // 상태 변경 알림 전송
-            adNotificationComponent.notifyAdStatusChange(
+            notificationService.notifyAdStatusChange(
                     ad,
                     oldStatus,
                     newStatus
@@ -134,7 +134,7 @@ public class SystemAdServiceImpl implements SystemAdService {
             AdvertisementStatus newStatus = ad.getStatus();
             
             // 상태 변경 알림 전송
-            adNotificationComponent.notifyAdStatusChange(
+            notificationService.notifyAdStatusChange(
                     ad,
                     oldStatus,
                     newStatus

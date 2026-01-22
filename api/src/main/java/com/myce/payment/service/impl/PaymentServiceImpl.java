@@ -2,10 +2,7 @@ package com.myce.payment.service.impl;
 
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
-import com.myce.payment.dto.PaymentRefundRequest;
-import com.myce.payment.dto.PaymentVerifyInfo;
-import com.myce.payment.dto.PaymentVerifyResponse;
-import com.myce.payment.dto.PortOneWebhookRequest;
+import com.myce.payment.dto.*;
 import com.myce.payment.entity.AdPaymentInfo;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.repository.AdPaymentInfoRepository;
@@ -37,7 +34,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public Map<String, Object> refundPayment(PaymentRefundRequest request) {
+    public RefundInternalResponse refundPayment(PaymentRefundRequest request) {
+        // public API에서 들어온 환불을 PaymentRefundService로 위임
         return paymentRefundService.refundPayment(request);
     }
 

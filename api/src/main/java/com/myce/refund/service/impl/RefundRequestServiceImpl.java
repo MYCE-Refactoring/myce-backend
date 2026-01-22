@@ -1,19 +1,19 @@
 package com.myce.refund.service.impl;
 
+import com.myce.client.payment.service.RefundInternalService;
 import com.myce.expo.entity.Expo;
+import com.myce.expo.entity.Ticket;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.common.exception.CustomException;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.member.dto.MileageUpdateRequest;
 import com.myce.client.notification.service.NotificationService;
-import com.myce.payment.entity.Payment;
-import com.myce.payment.entity.Refund;
+import com.myce.payment.dto.RefundInternalRequest;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.payment.entity.type.PaymentTargetType;
+import com.myce.member.service.MemberMileageService;
 import com.myce.payment.entity.type.RefundStatus;
-import com.myce.payment.repository.PaymentRepository;
-import com.myce.payment.repository.RefundRepository;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
 import com.myce.payment.service.refund.PaymentRefundService;
 import com.myce.payment.dto.PaymentRefundRequest;
@@ -24,8 +24,6 @@ import com.myce.refund.dto.RefundRequestDto;
 import com.myce.refund.dto.ReservationRefundCalculation;
 import com.myce.refund.service.RefundRequestService;
 import com.myce.refund.service.ReservationRefundCalculationService;
-import com.myce.member.service.MemberMileageService;
-import com.myce.expo.entity.Ticket;
 import com.myce.expo.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,11 +39,10 @@ import java.time.temporal.ChronoUnit;
 @Transactional
 public class RefundRequestServiceImpl implements RefundRequestService {
 
-    private final RefundRepository refundRepository;
-    private final PaymentRepository paymentRepository;
+    private final RefundInternalService refundInternalService;
+    private final PaymentRefundService paymentRefundService;
     private final ExpoRepository expoRepository;
     private final ReservationRepository reservationRepository;
-    private final PaymentRefundService paymentRefundService;
     private final ReservationRefundCalculationService refundCalculationService;
     private final MemberMileageService memberMileageService;
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
@@ -57,14 +54,6 @@ public class RefundRequestServiceImpl implements RefundRequestService {
 
     @Override
     public void createRefundRequest(Long memberId, Long expoId, RefundRequestDto requestDto) {
-        // 1. expoId로 결제 정보 조회
-        Payment payment = paymentRepository.findByTargetIdAndTargetType(expoId, PaymentTargetType.EXPO)
-                .orElseThrow(() -> new IllegalArgumentException("해당 엑스포의 결제 정보를 찾을 수 없습니다."));
-
-        // 2. 이미 환불 신청이 있는지 확인
-        if (refundRepository.existsByPaymentAndStatus(payment, RefundStatus.PENDING)) {
-            throw new IllegalStateException("이미 환불 신청이 진행 중입니다.");
-        }
 
         // 3. 엑스포 정보 조회 및 상태 확인
         Expo expo = expoRepository.findById(expoId)
@@ -87,17 +76,17 @@ public class RefundRequestServiceImpl implements RefundRequestService {
         notificationService.notifyExpoStatusChange(expo, oldStatus, newStatus);
         
         // 7. 환불 엔티티 생성 및 저장
-        Refund refund = Refund.builder()
-                .payment(payment)
-                .amount(requestDto.getAmount())
+        // 6) payment internal로 impUid 조회 (payment DB 직접 접근 제거)
+        String impUid = refundInternalService.getImpUid(PaymentTargetType.EXPO, expoId);
+
+        // 7) internal 환불 신청(PENDING 생성) 요청
+        RefundInternalRequest internalRequest = RefundInternalRequest.builder()
+                .impUid(impUid)
+                .cancelAmount(requestDto.getAmount())
                 .reason(requestDto.getReason())
-                .status(RefundStatus.PENDING)
-                .isPartial(isPartialRefund)
                 .build();
 
-        refundRepository.save(refund);
-
-
+        refundInternalService.requestRefund(internalRequest);
     }
     
     @Override
@@ -119,20 +108,14 @@ public class RefundRequestServiceImpl implements RefundRequestService {
         if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
             throw new CustomException(CustomErrorCode.RESERVATION_STATUS_INVALID);
         }
-        
-        // 4. 결제 정보 조회
-        Payment payment = paymentRepository.findByTargetIdAndTargetType(
-                reservationId, PaymentTargetType.RESERVATION)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
-        
-        // 5. 이미 환불된 결제인지 확인
-        if (refundRepository.existsByPaymentAndStatus(payment, RefundStatus.REFUNDED)) {
-            throw new CustomException(CustomErrorCode.ALREADY_REFUNDED);
-        }
+
         
         // 6. 환불 금액 계산 (수수료, 마일리지 등)
         ReservationRefundCalculation calculation = refundCalculationService.calculateRefundAmount(reservationId);
-        
+
+        // 5) impUid 조회 (payment internal)
+        String impUid = refundInternalService.getImpUid(PaymentTargetType.RESERVATION, reservationId);
+
         // 7. 환불 불가 조건 확인 (실제 환불 금액이 0원 이하)
         if (calculation.getActualRefundAmount() <= 0) {
             throw new CustomException(CustomErrorCode.REFUND_NOT_ALLOWED);
@@ -140,7 +123,7 @@ public class RefundRequestServiceImpl implements RefundRequestService {
         
         // 8. 환불 처리 (즉시 실행)
         PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
-                .impUid(payment.getImpUid())
+                .impUid(impUid)
                 .cancelAmount(calculation.getActualRefundAmount())
                 .reason(reason)
                 .build();

@@ -5,11 +5,14 @@ import com.myce.advertisement.dto.AdRejectInfoResponse;
 import com.myce.advertisement.entity.type.AdvertisementStatus;
 import com.myce.advertisement.service.AdStatusService;
 import com.myce.advertisement.service.SystemAdService;
-import com.myce.advertisement.service.component.AdNotificationComponent;
 import com.myce.advertisement.service.mapper.*;
+import com.myce.client.notification.service.NotificationService;
+import com.myce.client.payment.service.RefundInternalService;
 import com.myce.common.entity.RejectInfo;
 import com.myce.common.repository.RejectInfoRepository;
 import com.myce.member.dto.ad.*;
+import com.myce.payment.dto.RefundInternalRequest;
+import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.AdPaymentInfo;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.Refund;
@@ -66,7 +69,8 @@ public class UserAdServiceImpl implements UserAdService {
   private final AdStatusService adStatusService;
 
   private final SystemAdService systemAdService;
-  private final AdNotificationComponent adNotificationComponent;
+  private final NotificationService notificationService;
+  private final RefundInternalService refundInternalService;
 
 
   @Override
@@ -169,7 +173,7 @@ public class UserAdServiceImpl implements UserAdService {
     AdvertisementStatus newStatus = advertisement.getStatus();
 
     // ✅ 알림은 단 한 번, enum 기반으로
-    adNotificationComponent.notifyAdStatusChange(
+    notificationService.notifyAdStatusChange(
             advertisement,
             oldStatus,
             newStatus
@@ -182,78 +186,65 @@ public class UserAdServiceImpl implements UserAdService {
   @Transactional
   public void requestRefundByStatus(Long memberId, Long advertisementId, AdRefundRequest request) {
 
-    Advertisement advertisement = adRepository.findByIdAndMemberIdWithAdPosition(advertisementId, memberId)
-            .orElseThrow(() -> new CustomException(CustomErrorCode.AD_NOT_FOUND));
+    Advertisement advertisement = adRepository.findByIdAndMemberIdWithAdPosition( advertisementId, memberId ).orElseThrow( () -> new CustomException( CustomErrorCode.AD_NOT_FOUND ) );
 
     // AdPaymentInfo 조회
-    AdPaymentInfo adPaymentInfo = adPaymentInfoRepository.findByAdvertisementId(advertisementId)
-            .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
+    AdPaymentInfo adPaymentInfo = adPaymentInfoRepository.findByAdvertisementId( advertisementId ).orElseThrow( () -> new CustomException( CustomErrorCode.PAYMENT_INFO_NOT_FOUND ) );
 
-    // Payment 조회 (AD 타입, advertisementId)
-    Payment payment = paymentRepository.findByTargetIdAndTargetType(advertisementId, PaymentTargetType.AD)
-            .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_NOT_FOUND));
+    try {
+      refundInternalService.getRefundByTarget( PaymentTargetType.AD, advertisementId );
+      // 환불 내역이 있으면 중복 신청으로 처리
+      throw new CustomException( CustomErrorCode.ALREADY_REFUND_REQUESTED );
+    } catch (CustomException e) {
+      // 환불 내역이 없는 경우만 정상 흐름 진행
+      if (e.getErrorCode() != CustomErrorCode.REFUND_NOT_FOUND) {
+        throw e;
+      }
 
-    // 이미 환불 신청이 있는지 확인
-    if (refundRepository.findByPayment(payment).isPresent()) {
-      throw new CustomException(CustomErrorCode.ALREADY_REFUND_REQUESTED);
+      adStatusService.verifyRequestRefundByStatus( advertisement );
+
+      // 광고 상태에 따른 처리
+      AdvertisementStatus oldStatus = advertisement.getStatus();
+
+      advertisement.requestRefundByStatus();
+
+      Integer refundAmount;
+
+      switch (oldStatus) {
+        case PENDING_PUBLISH:
+          // 게시 예정 - 전액 환불
+          refundAmount = adPaymentInfo.getTotalAmount();
+
+          break;
+        case PUBLISHED:
+          // 게시 중 - 부분 환불 (남은 일수만큼)
+          LocalDate today = LocalDate.now();
+          LocalDate startDate = advertisement.getDisplayStartDate();
+
+          // 영수증과 동일한 계산 방식: 사용한 일수 계산 후 차감
+          int usedDays = (int) ChronoUnit.DAYS.between( startDate, today ) + 1; // +1은 시작일 포함
+          if (usedDays < 0) usedDays = 0;
+
+          // 남은 일수 계산
+          int remainingDays = adPaymentInfo.getTotalDay() - usedDays;
+          if (remainingDays < 0) remainingDays = 0;
+
+          refundAmount = remainingDays * adPaymentInfo.getFeePerDay();
+          break;
+        default:
+          throw new CustomException( CustomErrorCode.INVALID_ADVERTISEMENT_STATUS );
+      }
+
+      // 환불 신청은 payment internal에서 PENDING으로 생성
+      String impUid = refundInternalService.getImpUid( PaymentTargetType.AD, advertisementId );
+      RefundInternalRequest internalRequest = RefundInternalRequest.builder().impUid( impUid ).cancelAmount( refundAmount ).reason( request.getReason() ).build();
+
+      refundInternalService.requestRefund( internalRequest );
+
+      AdvertisementStatus newStatus = advertisement.getStatus();
+
+      notificationService.notifyAdStatusChange( advertisement, oldStatus, newStatus );
     }
-
-    adStatusService.verifyRequestRefundByStatus(advertisement);
-
-    // 광고 상태에 따른 처리
-    AdvertisementStatus oldStatus = advertisement.getStatus();
-
-    advertisement.requestRefundByStatus();
-
-    Integer refundAmount;
-    boolean isPartial;
-
-    switch (oldStatus) {
-      case PENDING_PUBLISH:
-        // 게시 예정 - 전액 환불
-        refundAmount = adPaymentInfo.getTotalAmount();
-        isPartial = false;
-
-        break;
-      case PUBLISHED:
-        // 게시 중 - 부분 환불 (남은 일수만큼)
-        LocalDate today = LocalDate.now();
-        LocalDate startDate = advertisement.getDisplayStartDate();
-
-        // 영수증과 동일한 계산 방식: 사용한 일수 계산 후 차감
-        int usedDays = (int) ChronoUnit.DAYS.between(startDate, today) + 1; // +1은 시작일 포함
-        if (usedDays < 0) usedDays = 0;
-
-        // 남은 일수 계산
-        int remainingDays = adPaymentInfo.getTotalDay() - usedDays;
-        if (remainingDays < 0) remainingDays = 0;
-
-        refundAmount = remainingDays * adPaymentInfo.getFeePerDay();
-        isPartial = true;
-        break;
-      default:
-        throw new CustomException(CustomErrorCode.INVALID_ADVERTISEMENT_STATUS);
-    }
-
-    // 환불 신청 생성
-    Refund refund = Refund.builder()
-            .payment(payment)
-            .amount(refundAmount)
-            .reason(request.getReason())
-            .status( RefundStatus.PENDING)
-            .isPartial(isPartial)
-            .refundedAt(null)
-            .build();
-
-    refundRepository.save(refund);
-
-    AdvertisementStatus newStatus = advertisement.getStatus();
-
-    adNotificationComponent.notifyAdStatusChange(
-            advertisement,
-            oldStatus,
-            newStatus
-    );
   }
 
   @Override
@@ -332,7 +323,7 @@ public class UserAdServiceImpl implements UserAdService {
 
     AdvertisementStatus newStatus = advertisement.getStatus();
 
-    adNotificationComponent.notifyAdStatusChange(
+    notificationService.notifyAdStatusChange(
             advertisement,
             oldStatus,
             newStatus
@@ -348,21 +339,17 @@ public class UserAdServiceImpl implements UserAdService {
     Advertisement advertisement = adRepository.findByIdAndMemberId(advertisementId, memberId)
             .orElseThrow(() -> new CustomException(CustomErrorCode.AD_NOT_FOUND));
 
-    Payment payment = paymentRepository.findByTargetIdAndTargetType(advertisementId, PaymentTargetType.AD)
-            .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
-
-    // 비즈니스 프로필 조회
-    BusinessProfile businessProfile = businessProfileRepository.findByTargetIdAndTargetType(advertisementId, TargetType.ADVERTISEMENT)
+    // 2) 비즈니스 프로필 조회 (영수증 표시용)
+    BusinessProfile businessProfile = businessProfileRepository
+            .findByTargetIdAndTargetType(advertisementId, TargetType.ADVERTISEMENT)
             .orElseThrow(() -> new CustomException(CustomErrorCode.BUSINESS_NOT_EXIST));
 
     // 광고 결제 정보 조회
     AdPaymentInfo adPaymentInfo = adPaymentInfoRepository.findByAdvertisementId(advertisementId)
             .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
 
-    // 실제 환불 내역 조회 (REFUND 테이블에서)
-    Refund refund = refundRepository.findByPayment(payment)
-            .orElseThrow(() -> new CustomException(CustomErrorCode.REFUND_NOT_FOUND));
-
+    RefundInternalResponse refund = refundInternalService.getRefundByTarget(
+            PaymentTargetType.AD, advertisementId);
 
     return adRefundReceiptMapper.toRefundHistoryDto(advertisement, businessProfile, adPaymentInfo, refund);
   }

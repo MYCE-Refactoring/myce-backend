@@ -1,5 +1,6 @@
 package com.myce.expo.service.platform.impl;
 
+import com.myce.client.payment.service.RefundInternalService;
 import com.myce.common.entity.BusinessProfile;
 import com.myce.common.entity.RejectInfo;
 import com.myce.common.entity.type.TargetType;
@@ -7,6 +8,7 @@ import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.common.repository.BusinessProfileRepository;
 import com.myce.common.repository.RejectInfoRepository;
+import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.ExpoRepository;
@@ -20,6 +22,7 @@ import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
+import com.myce.payment.entity.type.RefundStatus;
 import com.myce.payment.repository.ExpoPaymentInfoRepository;
 import com.myce.payment.repository.PaymentRepository;
 import com.myce.payment.repository.RefundRepository;
@@ -68,8 +71,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
     private final BusinessProfileRepository businessProfileRepository;
     
     // 취소/환불 관련 의존성
-    private final PaymentRepository paymentRepository;
-    private final RefundRepository refundRepository;
+    private final RefundInternalService refundInternalService;
     private final PaymentRefundService paymentRefundService;
     
     // 개인 예약자 환불 관련 의존성
@@ -268,37 +270,27 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
      * @param paymentInfo 박람회 결제 정보
      */
     private void processRefundToPortOne(Long expoId, ExpoPaymentInfo paymentInfo) {
-        // 1. Payment 엔티티 조회
-        Payment payment = paymentRepository.findByTargetIdAndTargetType(expoId, PaymentTargetType.EXPO)
-                .orElseThrow(() -> {
-                    log.error("박람회 취소 승인 실패 - Payment 정보 없음: expoId {}", expoId);
-                    return new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND);
-                });
-        
-        // 2. 기존 환불 신청 조회 및 상태 업데이트
-        Refund pendingRefund = refundRepository.findByPayment(payment)
-                .orElseThrow(() -> {
-                    log.error("박람회 취소 승인 실패 - 환불 신청 정보 없음: expoId {}", expoId);
-                    return new CustomException(CustomErrorCode.REFUND_NOT_FOUND);
-                });
+        // 1) 환불 신청 존재 확인 (internal 조회)
+        RefundInternalResponse refundInfo =
+                refundInternalService.getRefundByTarget(PaymentTargetType.EXPO, expoId);
+
+        // ※ 필요하면 상태 체크 (PENDING만 승인 가능)
+        if (refundInfo.getStatus() != RefundStatus.PENDING) {
+            throw new CustomException(CustomErrorCode.ALREADY_REFUNDED);
+        }
+
+        // 2) impUid 조회 (payment DB 직접 접근 제거)
+        String impUid = refundInternalService.getImpUid(PaymentTargetType.EXPO, expoId);
         
         // 3. 포트원 환불 요청 생성
         PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
-                .impUid(payment.getImpUid())
-                .merchantUid(payment.getMerchantUid())
-                .cancelAmount(null)  // null = 전액 환불
+                .impUid(impUid)
+                .cancelAmount(null)
                 .reason(CANCELLATION_REFUND_REASON)
                 .build();
-        
-        try {
-            // 4. 포트원 환불 API 호출
-            paymentRefundService.refundPayment(refundRequest);
-            log.info("포트원 환불 처리 완료 - expoId: {}, amount: {}", expoId, paymentInfo.getTotalAmount());
-            
-        } catch (Exception e) {
-            log.error("포트원 환불 처리 실패 - expoId: {}, error: {}", expoId, e.getMessage());
-            throw new CustomException(CustomErrorCode.PORTONE_REFUND_FAILED);
-        }
+
+        // 4) payment internal로 환불 실행
+        paymentRefundService.refundPayment(refundRequest);
     }
 
     /**
@@ -452,51 +444,30 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
      */
     private void refundIndividualReservation(Reservation reservation) {
         Long reservationId = reservation.getId();
-        log.debug("개별 예약 환불 처리 시작 - reservationId: {}", reservationId);
-        
-        // 1. 예약 상태를 CANCELLED로 변경
         reservation.updateStatus(ReservationStatus.CANCELLED);
         log.debug("예약 상태 변경 완료 - reservationId: {}, status: CANCELLED", reservationId);
         
         // 2. 예약 결제 정보 조회 및 상태 변경
         ReservationPaymentInfo paymentInfo = reservationPaymentInfoRepository
                 .findByReservationId(reservationId)
-                .orElseThrow(() -> {
-                    log.error("예약 결제 정보 없음 - reservationId: {}", reservationId);
-                    return new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND);
-                });
+                .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));;
         
         // 3. 결제 정보 상태를 REFUNDED로 변경
         paymentInfo.setStatus(PaymentStatus.REFUNDED);
         log.debug("예약 결제 정보 상태 변경 완료 - reservationId: {}, status: REFUNDED", reservationId);
-        
-        // 4. Payment 엔티티 조회
-        Payment payment = paymentRepository
-                .findByTargetIdAndTargetType(reservationId, PaymentTargetType.RESERVATION)
-                .orElseThrow(() -> {
-                    log.error("Payment 정보 없음 - reservationId: {}", reservationId);
-                    return new CustomException(CustomErrorCode.PAYMENT_NOT_FOUND);
-                });
 
-        // 5. refund 생성하지 않아도 됨. 환불 API 호출하면서 생성!
+        // 3) impUid 조회 (payment internal)
+        String impUid = refundInternalService.getImpUid(PaymentTargetType.RESERVATION, reservationId);
         
         // 6. 포트원 환불 API 호출
         PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
-                .impUid(payment.getImpUid())
-                .merchantUid(payment.getMerchantUid())
-                .cancelAmount(null)  // null = 전액 환불
+                .impUid(impUid)
+                .cancelAmount(null) // null = 전액 환불
                 .reason(INDIVIDUAL_RESERVATION_REFUND_REASON)
                 .build();
-        
-        try {
-            paymentRefundService.refundPayment(refundRequest);
-            log.debug("포트원 환불 처리 완료 - reservationId: {}, amount: {}", 
-                    reservationId, paymentInfo.getTotalAmount());
-        } catch (Exception e) {
-            log.error("포트원 환불 처리 실패 - reservationId: {}, error: {}", reservationId, e.getMessage());
-            throw new CustomException(CustomErrorCode.PORTONE_REFUND_FAILED);
-        }
-        
+
+        paymentRefundService.refundPayment(refundRequest);
+
         // 7. 티켓 재고 복구
         restoreTicketInventory(reservation);
         
@@ -542,33 +513,16 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
      * @return true: 원래 PUBLISHED 상태, false: 원래 PENDING_PUBLISH 상태
      */
     private boolean determineOriginalExpoStatus(Long expoId) {
-        // 1. 해당 박람회의 환불 신청 정보 조회
-        Payment expoPayment = paymentRepository
-                .findByTargetIdAndTargetType(expoId, PaymentTargetType.EXPO)
-                .orElseThrow(() -> {
-                    log.error("박람회 Payment 정보 없음 - expoId: {}", expoId);
-                    return new CustomException(CustomErrorCode.PAYMENT_NOT_FOUND);
-                });
-        
-        // 2. 원래 환불 신청 정보 조회 (사용자가 처음 신청한 환불)
-        // 박람회 주최자가 신청한 환불 정보만 조회
-        List<Refund> userRefunds = refundRepository.findAll().stream()
-                .filter(refund -> refund.getPayment().equals(expoPayment))
-                .filter(refund -> !refund.getReason().contains("박람회 취소 승인으로 인한")) // 시스템 생성 환불 제외
-                .sorted((r1, r2) -> r1.getCreatedAt().compareTo(r2.getCreatedAt())) // 생성일 오름차순
-                .toList();
-        
-        if (userRefunds.isEmpty()) {
-            log.error("박람회 사용자 환불 신청 정보 없음 - expoId: {}", expoId);
-            throw new CustomException(CustomErrorCode.REFUND_NOT_FOUND);
-        }
-        
-        // 사용자가 처음 신청한 환불의 isPartial 필드로 원래 상태 판단
-        Refund originalRefund = userRefunds.get(0);
-        boolean wasPublished = originalRefund.getIsPartial();
-        log.debug("박람회 원래 상태 확인 - expoId: {}, 원본 환불: {}, isPartial: {}, 원래상태: {}", 
-                expoId, originalRefund.getId(), wasPublished, wasPublished ? "PUBLISHED" : "PENDING_PUBLISH");
-        
+        // 1) internal에서 환불 정보 조회
+        RefundInternalResponse refund =
+                refundInternalService.getRefundByTarget(PaymentTargetType.EXPO, expoId);
+
+        // 2) isPartial == true면 원래 PUBLISHED, false면 PENDING_PUBLISH
+        boolean wasPublished = Boolean.TRUE.equals(refund.getIsPartial());
+
+        log.debug("박람회 원래 상태 확인 - expoId: {}, isPartial: {}, 원래상태: {}",
+                expoId, wasPublished, wasPublished ? "PUBLISHED" : "PENDING_PUBLISH");
+
         return wasPublished;
     }
 }
