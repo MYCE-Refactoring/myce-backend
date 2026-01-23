@@ -89,24 +89,8 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                     .amount(request.getAmount())
                     .reservationId(reservationId)
                     .build();
-            // payment 내부 API 호출 (응답 DTO 수신) ->TODO  상태값만 체크 post랑 get 중에 DTO 바로 넘겨도 되는지 해도 상관 없는지 check -
-            //            ResponseEntity<PaymentInternalResponse>  internalResponse = // http 상태값 받아올수 있다
-            //                    paymentClientService.post(
-            //                            //TODO API 이름
-            //                            "/payment",
-            //                            internalRequest,
-            //                            PaymentInternalResponse.class);
+
             PaymentInternalResponse body = paymentInternalClient.verifyAndSave(internalRequest);
-            //            //controller -> responseentity  받을 때 여기서 상태에 따라 예외 처리 -> 상태 체크
-            //            if(!internalResponse.getStatusCode().equals(HttpStatus.OK)){
-            //                log.warn("payment internal 실패 - status {}",internalResponse.getStatusCode());
-            //                throw new CustomException(CustomErrorCode.PAYMENT_NOT_PAID);
-            //            }
-            //            //body NULL 체크
-            //            PaymentInternalResponse body= internalResponse.getBody();
-            //            if (body == null) {
-            //                throw new CustomException(CustomErrorCode.INTERNAL_SERVER_ERROR);
-            //            }
 
             // 5. ReservationPaymentInfo 저장
             PaymentVerifyInfo verifyInfo = convertToPaymentVerifyInfo(request, reservationId);
@@ -115,6 +99,7 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
 
             // 6. 예약 상태를 CONFIRMED로 변경
             reservationService.updateStatusToConfirm(reservationId);
+
 
             // 7. 예약자 정보 저장 및 비회원 Guest ID 생성
             if (request.getReserverInfos() != null && !request.getReserverInfos().isEmpty()) {
@@ -140,6 +125,7 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
 
             // 12. 결제 완료 알림 발송
             // 회원: 기존 사이트 내 알림도 유지
+
             if (userType.equals(UserType.MEMBER)) {
                 paymentCommonService.sendAlert(reservation, paidAmount);
             }
@@ -162,6 +148,7 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                     .amount(paidAmount)
                     .reservationId(body.getReservationId())
                     .build();
+
         } catch (Exception e) {
             log.error("박람회 결제 통합 처리 실패 - 오류: {}", e.getMessage(), e);
             throw new CustomException(CustomErrorCode.PAYMENT_NOT_PAID);

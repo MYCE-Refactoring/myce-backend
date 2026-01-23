@@ -31,6 +31,7 @@ public class NotificationService {
         );
         notificationInternalClient.send( NotificationEndPoints.QR_ISSUED, body);
     }
+
     public void sendQrIssuedNotification(Long memberId, Long reservationId, String expoTitle) {
         sendQrIssuedNotification(memberId, reservationId, expoTitle, false);
     }

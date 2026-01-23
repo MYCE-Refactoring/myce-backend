@@ -31,10 +31,8 @@ public class QrNotificationServiceImpl implements QrNotificationService {
             Long memberId = reservation.getUserId();
 
             if (reservation.getUserType() == UserType.MEMBER) {
-                // 회원: 사이트 내 알림 + SSE 전송
                 notificationService.sendQrIssuedNotification(memberId, reservationId, expoTitle, isReissue);
             } else {
-                // 비회원: 이메일 알림
                 sendGuestEmailNotification(reserver, reservation, expoTitle, isReissue);
             }
         } catch (Exception e) {
@@ -42,11 +40,6 @@ public class QrNotificationServiceImpl implements QrNotificationService {
                     reserver.getId(), e.getMessage(), e);
         }
     }
-
-
-
-
-
     /**
      * 비회원에게 이메일 알림 전송
      */

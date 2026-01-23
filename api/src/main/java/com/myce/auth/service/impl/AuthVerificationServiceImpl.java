@@ -33,15 +33,6 @@ public class AuthVerificationServiceImpl implements AuthVerificationService {
         String code = randomCodeGenerateUtil.generateRandomCode(RANDOM_CODE_LENGTH);
         VerificationType verificationType = request.getVerificationType();
 
-
-//        MessageTemplate messageTemplate = messageTemplateService
-//                .getMessageForVerification(verificationType.getDescription(), code, String.valueOf(LIMIT_TIME));
-//
-//        mailSendComponent.sendMail(
-//                email,
-//                messageTemplate.getSubject(),
-//                messageTemplate.getContent()
-//                );
         mailSendService.sendVerificationMail(email, verificationType.getDescription(), code,String.valueOf(LIMIT_TIME));
 
         log.debug("[EmailVerification-{}] Successfully sent verification email to {}", verificationType.name(), email);

@@ -47,6 +47,7 @@ public class ExpoAdminQrServiceImpl implements ExpoAdminQrService {
             }
         }else{
             qrCodeService.issueQr(reserverId);
+
             QrCode newQrCode = qrCodeRepository.findByReserverId(reserverId)
                     .orElseThrow(() -> new CustomException(CustomErrorCode.QR_NOT_FOUND));
             newQrCode.markAsUsed();
