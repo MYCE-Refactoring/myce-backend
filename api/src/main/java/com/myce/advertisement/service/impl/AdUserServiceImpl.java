@@ -67,6 +67,7 @@ public class AdUserServiceImpl implements AdUserService {
 
 
   @Override
+  @Transactional
   public void saveAdvertisement(Long memberId, AdRegistrationRequest request) {
     // 로그인한 사용자
     Member member = memberRepository.findById(memberId)
@@ -171,6 +172,7 @@ public class AdUserServiceImpl implements AdUserService {
             oldStatus,
             newStatus
     );
+
   }
 
 
@@ -187,7 +189,7 @@ public class AdUserServiceImpl implements AdUserService {
     try {
       refundInternalService.getRefundByTarget( PaymentTargetType.AD, advertisementId );
       // 환불 내역이 있으면 중복 신청으로 처리
-      throw new CustomException( CustomErrorCode.ALREADY_REFUND_REQUESTED );
+      throw new CustomException(CustomErrorCode.ALREADY_REFUND_REQUESTED);
     } catch (CustomException e) {
       // 환불 내역이 없는 경우만 정상 흐름 진행
       if (e.getErrorCode() != CustomErrorCode.REFUND_NOT_FOUND) {
@@ -232,7 +234,7 @@ public class AdUserServiceImpl implements AdUserService {
       String impUid = refundInternalService.getImpUid( PaymentTargetType.AD, advertisementId );
       RefundInternalRequest internalRequest = RefundInternalRequest.builder().impUid( impUid ).cancelAmount( refundAmount ).reason( request.getReason() ).build();
 
-      refundInternalService.requestRefund( internalRequest );
+      refundInternalService.requestRefund(internalRequest);
 
       AdvertisementStatus newStatus = advertisement.getStatus();
 

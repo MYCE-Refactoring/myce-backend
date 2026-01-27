@@ -26,12 +26,6 @@ public class RestClientConfig {
         return RestClient.builder()
                 .baseUrl(notificationBaseUrl)
                 .defaultHeader(InternalHeaderKey.INTERNAL_AUTH, externalAuthValue)
-                .defaultStatusHandler(
-                        HttpStatusCode::isError,
-                        (request, response) -> {
-                            throw new CustomException(CustomErrorCode.NOTIFICATION_SERVER_ERROR);
-                        }
-                )
                 .build();
     }
 

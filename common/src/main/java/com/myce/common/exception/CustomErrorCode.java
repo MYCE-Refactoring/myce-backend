@@ -166,7 +166,10 @@ public enum CustomErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S999", "내부 서버 오류가 발생했습니다."),
 
     // RestClient 오류
-    NOTIFICATION_SERVER_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "EXT001", "알림 서버 요청에 실패했습니다");
+    NOTIFICATION_SERVER_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "EXT001", "알림 서버 요청에 실패했습니다"),
+    NOTIFICATION_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "N001", "알림 생성에 실패하였습니다"),
+    MAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "N002", "메일 전송에 실패하였습니다");
+
 
     private final HttpStatus status;
     private final String errorCode;
