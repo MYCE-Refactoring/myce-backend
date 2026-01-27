@@ -7,7 +7,7 @@ import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.Ticket;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
-import com.myce.expo.service.info.TicketService;
+import com.myce.expo.service.info.ExpoTicketService;
 import com.myce.payment.dto.*;
 import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.ReservationPaymentInfo;
@@ -27,7 +27,7 @@ import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.ReservationStatus;
 import com.myce.reservation.entity.code.UserType;
 import com.myce.reservation.repository.ReservationRepository;
-import com.myce.reservation.service.GuestReservationService;
+import com.myce.reservation.service.ReservationGuestService;
 import com.myce.reservation.service.ReservationService;
 import com.myce.reservation.service.ReserverService;
 import java.util.List;
@@ -37,7 +37,6 @@ import java.util.Objects;
 // import com.myce.client.payment.PaymentInternalClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,9 +55,9 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
     private final PaymentMapper paymentMapper;
     private final ReservationService reservationService;
     private final ReserverService reserverService;
-    private final TicketService ticketService;
+    private final ExpoTicketService expoTicketService;
     private final PaymentCommonService paymentCommonService;
-    private final GuestReservationService guestReservationService;
+    private final ReservationGuestService reservationGuestService;
     private final VerifyPaymentService verifyPaymentService; //-> Payment에서
     // private final PaymentInternalClient paymentClientService; // Payment 내부 API 호출 전담
     private final PaymentInternalService paymentInternalClient;
@@ -108,7 +107,7 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
 
             // 8. 티켓 수량 감소
             if (request.getTicketId() != null && request.getQuantity() != null) {
-                ticketService.updateRemainingQuantity(request.getTicketId(), request.getQuantity());
+                expoTicketService.updateRemainingQuantity(request.getTicketId(), request.getQuantity());
             }
 
             // 9. 마일리지 처리 & 회원 등급 업데이트(회원만)
@@ -196,7 +195,7 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
 
             // 8) 티켓 수량 감소
             if (request.getTicketId() != null && request.getQuantity() != null) {
-                ticketService.updateRemainingQuantity(request.getTicketId(), request.getQuantity());
+                expoTicketService.updateRemainingQuantity(request.getTicketId(), request.getQuantity());
             }
 
             // 9) vbank는 입금 완료 시 웹훅에서 후속 처리됨
@@ -284,7 +283,7 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                     .reservationId(reservationId)
                     .reserverInfos(convertReserverInfoList(reserverInfos))
                     .build();
-            guestReservationService.updateGuestId(guestRequest);
+            reservationGuestService.updateGuestId(guestRequest);
             log.info("비회원 Guest ID 생성 및 업데이트 완료 - reservationId: {}", reservationId);
         }
     }

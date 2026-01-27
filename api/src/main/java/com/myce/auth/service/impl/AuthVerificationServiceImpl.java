@@ -4,7 +4,7 @@ import com.myce.auth.dto.VerificationEmailRequest;
 import com.myce.auth.dto.VerifyEmailCodeRequest;
 import com.myce.auth.dto.type.VerificationType;
 import com.myce.auth.entity.EmailVerificationInfo;
-import com.myce.auth.repsitory.EmailVerificationRepository;
+import com.myce.auth.repository.EmailVerificationRepository;
 import com.myce.auth.service.AuthVerificationService;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;

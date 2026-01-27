@@ -1,6 +1,6 @@
 package com.myce.schedule.jobs;
 
-import com.myce.advertisement.service.SystemAdService;
+import com.myce.advertisement.service.AdSystemService;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -12,14 +12,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AdScheduler implements TaskScheduler {
-    private final SystemAdService systemAdService;
+    private final AdSystemService adSystemService;
     private final RedisTemplate<String, Object> redisTemplate;
 
     @PostConstruct
@@ -51,7 +48,7 @@ public class AdScheduler implements TaskScheduler {
 
     @Override
     public void process() {
-        systemAdService.updateAdStatus();
+        adSystemService.updateAdStatus();
     }
 
 }

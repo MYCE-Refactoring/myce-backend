@@ -2,7 +2,7 @@ package com.myce.member.service.impl;
 
 import com.myce.advertisement.dto.AdRegistrationRequest;
 import com.myce.advertisement.dto.AdRejectInfoResponse;
-import com.myce.advertisement.service.UserAdService;
+import com.myce.advertisement.service.AdUserService;
 import com.myce.member.dto.ad.*;
 import com.myce.member.service.MemberAdService;
 import lombok.RequiredArgsConstructor;
@@ -16,60 +16,60 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class MemberAdServiceImpl implements MemberAdService {
 
-    private final UserAdService userAdService;
+    private final AdUserService adUserService;
 
     @Override
     public void saveAdvertisement(Long memberId, AdRegistrationRequest request) {
-        userAdService.saveAdvertisement(memberId, request);
+        adUserService.saveAdvertisement(memberId, request);
     }
 
     @Override
     public Page<MemberAdvertisementResponse> getMemberAdvertisements(Long memberId, Pageable pageable) {
-        return userAdService.getMemberAdvertisements(memberId, pageable);
+        return adUserService.getMemberAdvertisements(memberId, pageable);
     }
 
     @Override
     public AdvertisementDetailResponse getAdvertisementDetail(Long memberId, Long advertisementId) {
-        return userAdService.getAdvertisementDetail(memberId, advertisementId);
+        return adUserService.getAdvertisementDetail(memberId, advertisementId);
     }
 
     @Override
     public void cancelAdvertisement(Long memberId, Long advertisementId) {
-        userAdService.cancelAdvertisement(memberId, advertisementId);
+        adUserService.cancelAdvertisement(memberId, advertisementId);
     }
 
     @Override
     public void cancelByStatus(Long memberId, Long advertisementId) {
-        userAdService.cancelByStatus(memberId, advertisementId);
+        adUserService.cancelByStatus(memberId, advertisementId);
     }
 
     @Override
     public void requestRefundByStatus(Long memberId, Long advertisementId, AdRefundRequest request) {
-        userAdService.requestRefundByStatus(memberId, advertisementId, request);
+        adUserService.requestRefundByStatus(memberId, advertisementId, request);
     }
 
     @Override
     public AdvertisementPaymentDetailResponse getAdvertisementPaymentDetail(Long memberId, Long advertisementId) {
-        return userAdService.getAdvertisementPaymentDetail(memberId, advertisementId);
+        return adUserService.getAdvertisementPaymentDetail(memberId, advertisementId);
     }
 
     @Override
     public AdvertisementRefundReceiptResponse getAdvertisementRefundReceipt(Long memberId, Long advertisementId) {
-        return userAdService.getAdvertisementRefundReceipt(memberId, advertisementId);
+        return adUserService.getAdvertisementRefundReceipt(memberId, advertisementId);
     }
 
     @Override
     public AdRejectInfoResponse getAdvertisementRejectInfo(Long memberId, Long advertisementId) {
-        return userAdService.getAdvertisementRejectInfo(memberId, advertisementId);
+        return adUserService.getAdvertisementRejectInfo(memberId, advertisementId);
     }
 
     @Override
     public AdRefundReceiptResponse getAdvertisementRefundHistory(Long memberId, Long advertisementId) {
-        return userAdService.getAdvertisementRefundHistory(memberId, advertisementId);
+        return adUserService.getAdvertisementRefundHistory(memberId, advertisementId);
     }
 
     @Override
     public void completeAdvertisementPayment(Long memberId, Long advertisementId) {
-        userAdService.completeAdvertisementPayment(memberId, advertisementId);
+        adUserService.completeAdvertisementPayment(memberId, advertisementId);
     }
 }
