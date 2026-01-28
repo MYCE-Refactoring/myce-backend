@@ -9,8 +9,6 @@ import com.myce.expo.dto.EventRequest;
 import com.myce.expo.dto.EventResponse;
 import com.myce.expo.entity.Event;
 import com.myce.expo.entity.Expo;
-import com.myce.expo.repository.AdminCodeRepository;
-import com.myce.expo.repository.AdminPermissionRepository;
 import com.myce.expo.repository.EventRepository;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.service.admin.ExpoEventService;
@@ -32,8 +30,6 @@ public class ExpoEventServiceImpl implements ExpoEventService {
     private final EventRepository eventRepository;
     private final ExpoRepository expoRepository;
     private final EventMapper eventMapper;
-    private final AdminCodeRepository adminCodeRepository;
-    private final AdminPermissionRepository adminPermissionRepository;
     private final ExpoAdminAccessValidate expoAdminAccessValidate;
 
     // 행사 등록
@@ -58,7 +54,6 @@ public class ExpoEventServiceImpl implements ExpoEventService {
 
     // 행사 목록 조회
     @Override
-    @Transactional(readOnly = true)
     public List<EventResponse> getEvents(Long expoId, LoginType loginType, Long principalId) {
         // 접근 권한 검증
         expoAdminAccessValidate.ensureViewable(expoId, principalId, loginType, ExpoAdminPermission.SCHEDULE_UPDATE);
@@ -74,7 +69,6 @@ public class ExpoEventServiceImpl implements ExpoEventService {
 
     // 행사 목록 조회 (공개용 - 비회원 접근 가능)
     @Override
-    @Transactional(readOnly = true)
     public List<EventResponse> getPublicEvents(Long expoId) {
         // 행사 엔티티 목록 조회 (권한 검증 없음)
         List<Event> events = eventRepository.findAllByExpoIdOrderByEventDateAscStartTimeAsc(expoId);
@@ -87,6 +81,7 @@ public class ExpoEventServiceImpl implements ExpoEventService {
 
     // 행사 수정
     @Override
+    @Transactional
     public EventResponse updateEvent(Long expoId, Long eventId, EventRequest request, LoginType loginType, Long principalId) {
         // 접근 권한 검증
         expoAdminAccessValidate.ensureEditable(expoId, principalId, loginType, ExpoAdminPermission.SCHEDULE_UPDATE);

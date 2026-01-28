@@ -319,17 +319,14 @@ public class ExpoLifeCycleServiceImpl implements ExpoLifeCycleService {
         // 1. 회원 역할을 EXPO_ADMIN으로 변경
         Member member = expo.getMember();
         member.updateRole(Role.EXPO_ADMIN);
-        memberRepository.save(member);
 
         // 2. 박람회 상태를 PENDING_PUBLISH로 변경
         expo.updateStatus(ExpoStatus.PENDING_PUBLISH);
-        expoRepository.save(expo);
 
         // 3. ExpoPaymentInfo 상태를 PENDING에서 SUCCESS로 업데이트
         ExpoPaymentInfo paymentInfo = expoPaymentInfoRepository.findByExpoId(expoId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
         paymentInfo.updateStatus(PaymentStatus.SUCCESS);
-        expoPaymentInfoRepository.save(paymentInfo);
 
         // 4. 5개의 EXPO_ADMIN_CODE 생성 및 권한 설정
         List<AdminCode> adminCodes = generateAdminCodes(expo, 5);

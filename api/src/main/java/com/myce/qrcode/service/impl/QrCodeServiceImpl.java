@@ -233,7 +233,6 @@ public class QrCodeServiceImpl implements QrCodeService {
             boolean shouldSendNotification = false;
 
             // 1단계: 모든 reserver에 대해 QR 생성
-            // createQrCode가 익셉션을 던져주기때문에 try-catch로 묶지않으면 한개라도 실패하면 전체 QR코드생성을 중단한다.
             for (Reserver reserver : reservers) {
                 try {
                     // 기존 QR이 있는지 확인

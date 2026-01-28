@@ -18,7 +18,7 @@ import com.myce.expo.entity.Review;
 import com.myce.expo.entity.Ticket;
 import com.myce.expo.entity.Booth;
 import com.myce.expo.repository.BoothRepository;
-import com.myce.expo.service.admin.impl.BoothMapper;
+import com.myce.expo.service.admin.mapper.BoothMapper;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.expo.repository.CategoryRepository;
 import com.myce.expo.repository.ExpoRepository;

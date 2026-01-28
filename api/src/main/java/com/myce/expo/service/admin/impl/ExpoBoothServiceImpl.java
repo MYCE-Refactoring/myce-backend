@@ -9,11 +9,10 @@ import com.myce.expo.dto.BoothRequest;
 import com.myce.expo.dto.BoothResponse;
 import com.myce.expo.entity.Booth;
 import com.myce.expo.entity.Expo;
-import com.myce.expo.repository.AdminCodeRepository;
-import com.myce.expo.repository.AdminPermissionRepository;
 import com.myce.expo.repository.BoothRepository;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.service.admin.ExpoBoothService;
+import com.myce.expo.service.admin.mapper.BoothMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +28,6 @@ public class ExpoBoothServiceImpl implements ExpoBoothService {
     private final BoothRepository boothRepository;
     private final ExpoRepository expoRepository;
     private final BoothMapper boothMapper;
-    private final AdminCodeRepository adminCodeRepository;
-    private final AdminPermissionRepository adminPermissionRepository;
     private final ExpoAdminAccessValidate expoAdminAccessValidate;
 
     @Override

@@ -1,4 +1,4 @@
-package com.myce.expo.service.admin.impl;
+package com.myce.expo.service.admin.mapper;
 
 import com.myce.expo.dto.ExpoAdminTicketRequestDto;
 import com.myce.expo.dto.ExpoAdminTicketResponseDto;

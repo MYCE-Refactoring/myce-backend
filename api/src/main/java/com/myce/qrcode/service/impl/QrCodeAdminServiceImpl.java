@@ -56,6 +56,7 @@ public class QrCodeAdminServiceImpl implements QrCodeAdminService {
     }
 
     @Override
+    @Transactional
     public List<ExpoAdminReservationResponse> reissueReserverQrCode(Long expoId,
                                                               Long memberId,
                                                               LoginType loginType,
