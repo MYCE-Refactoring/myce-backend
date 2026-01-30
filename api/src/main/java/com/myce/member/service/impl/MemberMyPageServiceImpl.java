@@ -14,17 +14,25 @@ import com.myce.member.repository.FavoriteRepository;
 import com.myce.member.repository.MemberRepository;
 import com.myce.member.repository.MemberSettingRepository;
 import com.myce.member.service.MemberMyPageService;
-import com.myce.payment.repository.PaymentRepository;
+import com.myce.client.payment.service.PaymentInternalService;
+import com.myce.payment.dto.PaymentInternalDetailResponse;
+import com.myce.payment.dto.PaymentInternalTargetRequest;
+import com.myce.payment.entity.type.PaymentTargetType;
+import com.myce.payment.repository.ReservationPaymentInfoRepository;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.UserType;
 import com.myce.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,12 +43,13 @@ public class MemberMyPageServiceImpl implements MemberMyPageService {
     private final ReservedExpoMapper reservedExpoMapper;
     private final MemberRepository memberRepository;
     private final MemberInfoMapper memberInfoMapper;
-    private final PaymentRepository paymentRepository;
+    private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
     private final PaymentHistoryMapper paymentHistoryMapper;
     private final MemberSettingRepository memberSettingRepository;
     private final MemberSettingMapper memberSettingMapper;
     private final FavoriteExpoMapper favoriteExpoMapper;
     private final FavoriteRepository favoriteRepository;
+    private final PaymentInternalService paymentInternalService;
 
     @Override
     public Page<ReservedExpoResponse> getReservedExpos(Long memberId, Pageable pageable) {
@@ -73,9 +82,43 @@ public class MemberMyPageServiceImpl implements MemberMyPageService {
 
     @Override
     public Page<PaymentHistoryResponse> getPaymentHistory(Long memberId, Pageable pageable) {
-        Page<Object[]> paymentHistoryData = paymentRepository.findReservationPaymentHistoryByUserTypeAndUserId(
-                UserType.MEMBER, memberId, pageable);
-        return paymentHistoryData.map(paymentHistoryMapper::toResponseDto);
+        Page<Reservation> reservations = reservationRepository
+                .findReservationsByUserTypeAndUserIdWithExpoAndTicket(UserType.MEMBER, memberId, pageable);
+        List<Long> reservationIds = reservations.getContent().stream()
+                .map(Reservation::getId)
+                .toList();
+        if (reservationIds.isEmpty()) {
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+
+        Map<Long, com.myce.payment.entity.ReservationPaymentInfo> paymentInfoMap =
+                reservationPaymentInfoRepository.findByReservationIdIn(reservationIds).stream()
+                        .collect(Collectors.toMap(
+                                info -> info.getReservation().getId(),
+                                info -> info
+                        ));
+
+        List<PaymentInternalTargetRequest> targets = reservationIds.stream()
+                .map(id -> PaymentInternalTargetRequest.builder()
+                        .targetType(PaymentTargetType.RESERVATION)
+                        .targetId(id)
+                        .build())
+                .toList();
+
+        Map<Long, PaymentInternalDetailResponse> paymentMap = paymentInternalService.getPaymentsByTargets(targets)
+                .stream()
+                .collect(Collectors.toMap(PaymentInternalDetailResponse::getTargetId, payment -> payment));
+
+        List<PaymentHistoryResponse> responses = reservations.getContent().stream()
+                .map(reservation -> paymentHistoryMapper.toResponseDto(
+                        reservation,
+                        paymentInfoMap.get(reservation.getId()),
+                        paymentMap.get(reservation.getId())
+                ))
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new PageImpl<>(responses, pageable, responses.size());
     }
 
     @Override

@@ -14,8 +14,6 @@ import com.myce.member.dto.ad.*;
 import com.myce.payment.dto.RefundInternalRequest;
 import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.AdPaymentInfo;
-import com.myce.payment.entity.Payment;
-import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.entity.type.RefundStatus;
@@ -24,8 +22,6 @@ import com.myce.system.entity.AdPosition;
 import com.myce.advertisement.entity.Advertisement;
 import com.myce.system.repository.AdPositionRepository;
 import com.myce.advertisement.repository.AdRepository;
-import com.myce.payment.repository.PaymentRepository;
-import com.myce.payment.repository.RefundRepository;
 import com.myce.advertisement.service.UserAdService;
 import com.myce.common.dto.RegistrationCompanyRequest;
 import com.myce.common.entity.BusinessProfile;
@@ -56,8 +52,6 @@ public class UserAdServiceImpl implements UserAdService {
   private final AdPositionRepository adPositionRepository;
   private final AdRepository adRepository;
   private final RejectInfoRepository rejectInfoRepository;
-  private final RefundRepository refundRepository;
-  private final PaymentRepository paymentRepository;
   private final BusinessProfileRepository  businessProfileRepository;
   private final AdPaymentInfoRepository adPaymentInfoRepository;
 

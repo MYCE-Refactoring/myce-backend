@@ -8,29 +8,20 @@ import com.myce.common.exception.CustomException;
 import com.myce.payment.dto.*;
 import com.myce.payment.entity.AdPaymentInfo;
 import com.myce.payment.entity.ExpoPaymentInfo;
-import com.myce.payment.entity.Payment;
-import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
-import com.myce.payment.entity.type.RefundStatus;
 import com.myce.payment.repository.AdPaymentInfoRepository;
 import com.myce.payment.repository.ExpoPaymentInfoRepository;
-import com.myce.payment.repository.PaymentRepository;
-import com.myce.payment.repository.RefundRepository;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
 import com.myce.advertisement.entity.Advertisement;
 import com.myce.advertisement.entity.type.AdvertisementStatus;
-import com.myce.payment.service.portone.PortOneApiService;
 import com.myce.payment.service.refund.PaymentRefundService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Service

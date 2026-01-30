@@ -14,7 +14,6 @@ import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.repository.AdPaymentInfoRepository;
 import com.myce.payment.repository.ExpoPaymentInfoRepository;
-import com.myce.payment.repository.RefundRepository;
 import com.myce.settlement.entity.code.SettlementStatus;
 import com.myce.settlement.repository.SettlementRepository;
 import lombok.RequiredArgsConstructor;

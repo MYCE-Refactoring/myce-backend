@@ -11,11 +11,14 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
 public interface ReservationPaymentInfoRepository extends JpaRepository<ReservationPaymentInfo, Long> {
     Optional<ReservationPaymentInfo> findByReservationId(Long reservationId);
+
+    List<ReservationPaymentInfo> findByReservationIdIn(Collection<Long> reservationIds);
 
     // === 대시보드 통계용 쿼리 메서드들 ===
 

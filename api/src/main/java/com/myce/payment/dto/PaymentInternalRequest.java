@@ -1,5 +1,6 @@
 package com.myce.payment.dto;
 
+import com.myce.payment.entity.type.PaymentTargetType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,4 +23,8 @@ public class PaymentInternalRequest{
 
     // 예약 정보
     private Long reservationId;   // 이미 생성된 Reservation의 ID
+
+    private PaymentTargetType targetType;
+    private Long targetId;
+
 }

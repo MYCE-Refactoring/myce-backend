@@ -50,7 +50,7 @@ public class PaymentController {
   // 포트원 웹훅 API
   @PostMapping("/webhook")
   public ResponseEntity<Void> portoneWebhook(@RequestBody PortOneWebhookRequest request) {
-    log.info("[포트원 웹훅]: {}", request);
+    log.info("[포트원 웹훅] imp_uid={}, merchant_uid={}, status={}", request.getImpUid(), request.getMerchantUid(), request.getStatus());
     paymentService.processWebhook(request);
     return ResponseEntity.ok().build();
   }
@@ -99,7 +99,7 @@ public class PaymentController {
       @RequestBody ReservationPaymentVerifyRequest request) {
     PreReservationCacheDto cacheDto = preparationComponent.prepareReservationData(request.getSessionId());
 
-    PaymentVerifyResponse response = reservationPaymentService.verifyAndCompleteReservationPayment(request, cacheDto);
+    PaymentVerifyResponse response = reservationPaymentService.verifyAndPendingVbankReservationPayment(request, cacheDto);
 
     preparationComponent.cleanupSession(request.getSessionId());
 

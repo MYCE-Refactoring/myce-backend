@@ -29,6 +29,7 @@ public class RestClientConfig {
     public RestClient paymentClient() {
         return RestClient.builder()
                 .baseUrl(paymentBaseUrl)
+                .defaultHeader("X-Internal-Auth", externalAuthValue)
                 .build();
     }
 }
