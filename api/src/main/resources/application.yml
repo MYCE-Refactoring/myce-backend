@@ -8,7 +8,7 @@ internal:
 
 external:
   base-url:
-    notification: lb://NOTIFICATION-INTERNAL
+    notification: lb://NOTIFICATION-API
     payment: lb://PAYMENT-INTERNAL
   auth:
     value: internal-request

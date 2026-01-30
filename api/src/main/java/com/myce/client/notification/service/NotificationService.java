@@ -35,7 +35,7 @@ public class NotificationService {
         ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.QR_ISSUED, body);
 
         if (!res.getStatusCode().is2xxSuccessful()) {
-            throw new CustomException( CustomErrorCode.NOTIFICATION_SAVE_FAILED);
+            throw new CustomException(CustomErrorCode.NOTIFICATION_SAVE_FAILED);
         }
     }
 
