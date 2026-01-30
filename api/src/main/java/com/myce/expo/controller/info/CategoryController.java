@@ -1,7 +1,7 @@
 package com.myce.expo.controller.info;
 
 import com.myce.expo.dto.CategoryResponse;
-import com.myce.expo.service.info.CategoryService;
+import com.myce.expo.service.info.ExpoCategoryService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
 public class CategoryController {
-  private  final CategoryService categoryService;
+  private  final ExpoCategoryService expoCategoryService;
 
   // 카테고리 목록 조회
   @GetMapping()
   public ResponseEntity<List<CategoryResponse>> getAllCategories() {
-    List<CategoryResponse> categories = categoryService.getCategories();
+    List<CategoryResponse> categories = expoCategoryService.getCategories();
     return ResponseEntity.ok().body(categories);
   }
 }

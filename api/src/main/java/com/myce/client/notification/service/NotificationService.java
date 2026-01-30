@@ -5,11 +5,14 @@ import com.myce.advertisement.entity.type.AdvertisementStatus;
 import com.myce.client.notification.dto.AdStatusChangeCommand;
 import com.myce.client.notification.dto.PaymentCompleteRequest;
 import com.myce.client.notification.NotificationInternalClient;
+import com.myce.common.exception.CustomErrorCode;
+import com.myce.common.exception.CustomException;
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.type.ExpoStatus;
 import com.myce.client.notification.dto.NotificationEndPoints;
 import com.myce.client.notification.dto.ExpoStatusChangeCommand;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,13 +32,22 @@ public class NotificationService {
                 "expoTitle", expoTitle,
                 "reissue", reissue
         );
-        notificationInternalClient.send( NotificationEndPoints.QR_ISSUED, body);
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.QR_ISSUED, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException(CustomErrorCode.NOTIFICATION_SAVE_FAILED);
+        }
     }
+
     public void sendQrIssuedNotification(Long memberId, Long reservationId, String expoTitle) {
         sendQrIssuedNotification(memberId, reservationId, expoTitle, false);
     }
     public void sendPaymentComplete(PaymentCompleteRequest req) {
-        notificationInternalClient.send(NotificationEndPoints.PAYMENT_COMPLETED, req );
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.PAYMENT_COMPLETED, req);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.NOTIFICATION_SAVE_FAILED);
+        }
     }
 
     public void notifyExpoStart(List<Long> userIds, Long expoId, String expoTitle) {
@@ -48,13 +60,21 @@ public class NotificationService {
                 "expoId", expoId,
                 "expoTitle", expoTitle
         );
-        notificationInternalClient.send(NotificationEndPoints.EXPO_START, body);
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.EXPO_START, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.NOTIFICATION_SAVE_FAILED);
+        }
 
     }
 
     public void notifyExpoStatusChange(Expo expo, ExpoStatus oldStatus, ExpoStatus newStatus) {
-        ExpoStatusChangeCommand command =commandGenerator(expo, oldStatus, newStatus);
-        notificationInternalClient.send( NotificationEndPoints.EXPO_STATUS_CHANGED, command);
+        ExpoStatusChangeCommand command= commandGenerator(expo, oldStatus, newStatus);
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.EXPO_STATUS_CHANGED, command);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.NOTIFICATION_SAVE_FAILED);
+        }
 
     }
 
@@ -79,13 +99,23 @@ public class NotificationService {
                 "eventName", eventName,
                 "startTime", startTime
         );
-        notificationInternalClient.send(NotificationEndPoints.EVENT_REMINDER,body);
+
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.EVENT_REMINDER, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.NOTIFICATION_SAVE_FAILED);
+        }
+
     }
 
     public void notifyAdStatusChange(Advertisement ad, AdvertisementStatus oldStatus, AdvertisementStatus newStatus) {
 
         AdStatusChangeCommand command = commandGenerator(ad, oldStatus, newStatus);
-        notificationInternalClient.send("notifications/ad-status-changed", command);
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.AD_STATUS_CHANGED, command);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.NOTIFICATION_SAVE_FAILED);
+        }
 
     }
 

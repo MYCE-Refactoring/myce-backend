@@ -4,7 +4,7 @@ import com.myce.auth.dto.VerificationEmailRequest;
 import com.myce.auth.dto.VerifyEmailCodeRequest;
 import com.myce.auth.dto.type.VerificationType;
 import com.myce.auth.entity.EmailVerificationInfo;
-import com.myce.auth.repsitory.EmailVerificationRepository;
+import com.myce.auth.repository.EmailVerificationRepository;
 import com.myce.auth.service.AuthVerificationService;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
@@ -33,15 +33,6 @@ public class AuthVerificationServiceImpl implements AuthVerificationService {
         String code = randomCodeGenerateUtil.generateRandomCode(RANDOM_CODE_LENGTH);
         VerificationType verificationType = request.getVerificationType();
 
-
-//        MessageTemplate messageTemplate = messageTemplateService
-//                .getMessageForVerification(verificationType.getDescription(), code, String.valueOf(LIMIT_TIME));
-//
-//        mailSendComponent.sendMail(
-//                email,
-//                messageTemplate.getSubject(),
-//                messageTemplate.getContent()
-//                );
         mailSendService.sendVerificationMail(email, verificationType.getDescription(), code,String.valueOf(LIMIT_TIME));
 
         log.debug("[EmailVerification-{}] Successfully sent verification email to {}", verificationType.name(), email);

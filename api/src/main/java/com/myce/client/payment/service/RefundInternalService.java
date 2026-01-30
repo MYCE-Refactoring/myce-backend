@@ -101,6 +101,7 @@ public class RefundInternalService {
         }
 
         RefundInternalResponse body = response.getBody();
+        
         if (body == null) {
             throw new CustomException(CustomErrorCode.INTERNAL_SERVER_ERROR);
         }

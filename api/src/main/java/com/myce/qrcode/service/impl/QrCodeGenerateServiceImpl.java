@@ -30,7 +30,6 @@ public class QrCodeGenerateServiceImpl implements QrCodeGenerateService {
 
     @Override
     public QrCode createQrCode(Reserver reserver) {
-        try {
             // 고유 토큰 생성
             String token = UUID.randomUUID().toString();
 
@@ -38,7 +37,7 @@ public class QrCodeGenerateServiceImpl implements QrCodeGenerateService {
             byte[] image = qrImageGenerateService.generateQrImage(token);
 
             // S3 업로드
-            String imageUrl = uploadToStorage(image, token);
+            String imageUrl = s3Service.uploadQrImage(image, token);
 
             // 상태 및 시간 계산
             LocalDateTime activatedAt = qrStatusService.calculateActivatedAt(reserver);
@@ -54,18 +53,5 @@ public class QrCodeGenerateServiceImpl implements QrCodeGenerateService {
                     .activatedAt(activatedAt)
                     .expiredAt(expiredAt)
                     .build();
-        } catch (Exception e) {
-            log.error("QR 코드 생성 실패 - 예약자 ID: {}, 오류: {}", reserver.getId(), e.getMessage(), e);
-            throw new CustomException(CustomErrorCode.QR_GENERATION_FAILED);
-        }
-    }
-
-    private String uploadToStorage(byte[] image, String token) {
-        try {
-            return s3Service.uploadQrImage(image, token);
-        } catch (Exception e) {
-            log.error("QR 이미지 S3 업로드 실패 - token: {}, 오류: {}", token, e.getMessage(), e);
-            throw new CustomException(CustomErrorCode.QR_GENERATION_FAILED);
-        }
     }
 }

@@ -13,6 +13,7 @@ import com.myce.expo.entity.type.TicketType;
 import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
 import com.myce.expo.service.admin.ExpoAdminTicketService;
+import com.myce.expo.service.admin.mapper.ExpoAdminTicketMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

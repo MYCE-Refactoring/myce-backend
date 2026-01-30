@@ -75,6 +75,7 @@ public class ExpoAdminServiceImpl implements ExpoAdminService {
 
 
     @Override
+    @Transactional
     public MyExpoDetailResponse updateMyExpoDescription(Long expoId, MyExpoDescriptionUpdateRequest updateRequest, LoginType loginType, Long principalId) {
         // 권한 검증 (EXPO_DETAIL_UPDATE 권한 필요)
         expoAdminAccessValidate.ensureViewable(expoId, principalId, loginType, ExpoAdminPermission.EXPO_DETAIL_UPDATE);

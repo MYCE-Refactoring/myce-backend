@@ -68,9 +68,6 @@ public class AuthServiceImpl implements AuthService {
         String tempPassword = randomCodeGenerateUtil.generateRandomCode(TEMP_PASSWORD_LENGTH);
         member.resetPassword(passwordEncoder.encode(tempPassword));
 
-//        MessageTemplate messageTemplate = messageTemplateService.getMessageForResetPassword(tempPassword);
-//        mailSendComponent.sendMail(request.getEmail(), messageTemplate.getSubject(), messageTemplate.getContent());
-
         mailSendService.sendResetPwMail(request.getEmail(), tempPassword);
     }
 

@@ -3,7 +3,7 @@ package com.myce.expo.controller.admin;
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.expo.dto.BoothRequest;
 import com.myce.expo.dto.BoothResponse;
-import com.myce.expo.service.admin.BoothService;
+import com.myce.expo.service.admin.ExpoBoothService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BoothController {
 
-    private final BoothService boothService;
+    private final ExpoBoothService expoBoothService;
 
     // 부스 등록
     @PostMapping
@@ -26,7 +26,7 @@ public class BoothController {
             @PathVariable Long expoId,
             @Valid @RequestBody BoothRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        BoothResponse response = boothService.saveBooth(expoId, request, userDetails.getLoginType(), userDetails.getMemberId());
+        BoothResponse response = expoBoothService.saveBooth(expoId, request, userDetails.getLoginType(), userDetails.getMemberId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -36,7 +36,7 @@ public class BoothController {
             @PathVariable Long expoId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        List<BoothResponse> booths = boothService.getMyBooths(expoId, userDetails.getLoginType(), userDetails.getMemberId());
+        List<BoothResponse> booths = expoBoothService.getMyBooths(expoId, userDetails.getLoginType(), userDetails.getMemberId());
         return ResponseEntity.ok(booths);
     }
 
@@ -48,7 +48,7 @@ public class BoothController {
             @Valid @RequestBody BoothRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        BoothResponse response = boothService.updateBooth(expoId, boothId, request, userDetails.getLoginType(), userDetails.getMemberId());
+        BoothResponse response = expoBoothService.updateBooth(expoId, boothId, request, userDetails.getLoginType(), userDetails.getMemberId());
         return ResponseEntity.ok(response);
     }
 
@@ -59,7 +59,7 @@ public class BoothController {
             @PathVariable Long boothId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        boothService.deleteBooth(expoId, boothId, userDetails.getLoginType(), userDetails.getMemberId());
+        expoBoothService.deleteBooth(expoId, boothId, userDetails.getLoginType(), userDetails.getMemberId());
         return ResponseEntity.noContent().build();
     }
 }

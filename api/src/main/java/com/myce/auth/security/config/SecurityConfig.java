@@ -62,6 +62,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+
         LoginFilter loginFilter = new LoginFilter
                 (jwtUtil, tokenCookieProvider, authenticationManager(), refreshTokenRepository);
         loginFilter.setFilterProcessesUrl("/api/auth/login");

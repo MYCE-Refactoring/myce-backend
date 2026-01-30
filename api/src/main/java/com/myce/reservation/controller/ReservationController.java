@@ -10,7 +10,7 @@ import com.myce.reservation.dto.ReservationSuccessResponse;
 import com.myce.reservation.dto.ReserverBulkUpdateRequest;
 import com.myce.reservation.dto.GuestReservationRequest;
 import com.myce.reservation.service.ReservationService;
-import com.myce.reservation.service.GuestReservationService;
+import com.myce.reservation.service.ReservationGuestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReservationController {
     
     private final ReservationService reservationService;
-    private final GuestReservationService guestReservationService;
+    private final ReservationGuestService reservationGuestService;
 
     @GetMapping("/{reservationId}")
     public ResponseEntity<ReservationDetailResponse> getReservationDetail(
@@ -51,7 +51,7 @@ public class ReservationController {
     public ResponseEntity<Void> updateGuestId(
         @Valid @RequestBody GuestReservationRequest request
     ) {
-        guestReservationService.updateGuestId(request);
+        reservationGuestService.updateGuestId(request);
         return ResponseEntity.ok().build();
     }
 

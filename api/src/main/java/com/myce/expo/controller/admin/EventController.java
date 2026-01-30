@@ -3,7 +3,7 @@ package com.myce.expo.controller.admin;
 import com.myce.auth.dto.CustomUserDetails;
 import com.myce.expo.dto.EventRequest;
 import com.myce.expo.dto.EventResponse;
-import com.myce.expo.service.admin.EventService;
+import com.myce.expo.service.admin.ExpoEventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EventController {
 
-    private final EventService eventService;
+    private final ExpoEventService expoEventService;
 
     // 행사 등록
     @PostMapping
@@ -26,7 +26,7 @@ public class EventController {
             @PathVariable Long expoId,
             @Valid @RequestBody EventRequest eventRequest,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        EventResponse response = eventService.saveEvent(expoId, eventRequest, userDetails.getLoginType(), userDetails.getMemberId());
+        EventResponse response = expoEventService.saveEvent(expoId, eventRequest, userDetails.getLoginType(), userDetails.getMemberId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -35,14 +35,14 @@ public class EventController {
     public ResponseEntity<List<EventResponse>> getEvents(
             @PathVariable Long expoId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<EventResponse> events = eventService.getEvents(expoId, userDetails.getLoginType(), userDetails.getMemberId());
+        List<EventResponse> events = expoEventService.getEvents(expoId, userDetails.getLoginType(), userDetails.getMemberId());
         return ResponseEntity.ok(events);
     }
 
     // 행사 목록 조회 (공개용 - 비회원 접근 가능)
     @GetMapping
     public ResponseEntity<List<EventResponse>> getPublicEvents(@PathVariable Long expoId) {
-        List<EventResponse> events = eventService.getPublicEvents(expoId);
+        List<EventResponse> events = expoEventService.getPublicEvents(expoId);
         return ResponseEntity.ok(events);
     }
 
@@ -53,7 +53,7 @@ public class EventController {
             @PathVariable Long eventId,
             @Valid @RequestBody EventRequest eventRequest,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        EventResponse response = eventService.updateEvent(expoId, eventId, eventRequest, userDetails.getLoginType(), userDetails.getMemberId());
+        EventResponse response = expoEventService.updateEvent(expoId, eventId, eventRequest, userDetails.getLoginType(), userDetails.getMemberId());
         return ResponseEntity.ok(response);
     }
 
@@ -63,7 +63,7 @@ public class EventController {
             @PathVariable Long expoId,
             @PathVariable Long eventId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        eventService.deleteEvent(expoId, eventId, userDetails.getLoginType(), userDetails.getMemberId());
+        expoEventService.deleteEvent(expoId, eventId, userDetails.getLoginType(), userDetails.getMemberId());
         return ResponseEntity.noContent().build();
     }
 }

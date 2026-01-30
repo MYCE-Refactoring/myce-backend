@@ -19,6 +19,7 @@ import com.myce.qrcode.service.mapper.QrResponseMapper;
 import com.myce.reservation.entity.Reserver;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.UserType;
+import com.myce.reservation.repository.ReservationRepository;
 import com.myce.reservation.repository.ReserverRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class QrCodeServiceImpl implements QrCodeService {
 
     private final QrCodeRepository qrCodeRepository;
     private final ReserverRepository reserverRepository;
+    private final ReservationRepository reservationRepository;
     private final AdminCodeRepository adminCodeRepository;
     private final QrResponseMapper qrResponseMapper;
     private final QrCodeGenerateService qrCodeGenerateService;
@@ -54,18 +56,14 @@ public class QrCodeServiceImpl implements QrCodeService {
             throw new CustomException(CustomErrorCode.QR_ALREADY_EXISTS);
         }
 
-        try {
-            QrCode qrCode = qrCodeGenerateService.createQrCode(reserver);
-            qrCodeRepository.save(qrCode);
-            log.info("QR 코드 발급 완료 - 예약자 ID: {}", reserverId);
+        QrCode qrCode = qrCodeGenerateService.createQrCode(reserver);
+        qrCodeRepository.save(qrCode);
+        log.info("QR 코드 발급 완료 - 예약자 ID: {}", reserverId);
+        
+        // 알림 전송 실패는 트랜잭션 롤백 안되는 걸로 진행
+        qrNotificationService.sendQrIssuedNotification(reserver, false);
 
-            // QR 발급 성공 알림 전송
-            qrNotificationService.sendQrIssuedNotification(reserver, false);
-        } catch (Exception e) {
-            log.error("QR 코드 발급 실패 - 예약자 ID: {}, 오류: {}", reserverId, e.getMessage(), e);
-            throw new CustomException(CustomErrorCode.QR_GENERATION_FAILED);
-        }
-    }
+    };
 
     @Override
     @Transactional
@@ -76,18 +74,11 @@ public class QrCodeServiceImpl implements QrCodeService {
                 .orElseThrow(() -> new CustomException(CustomErrorCode.RESERVER_NOT_FOUND));
 
         if (qrCodeRepository.findByReserver(reserver).isPresent()) {
-            log.debug("[issueQrWithoutNotification] 중복 발급 요청 차단 - 이미 QR 존재. reserverId={}", reserverId);
-            return;
+            throw new CustomException(CustomErrorCode.QR_ALREADY_EXISTS);
         }
 
-        try {
-            QrCode qrCode = qrCodeGenerateService.createQrCode(reserver);
-            qrCodeRepository.save(qrCode);
-            log.info("QR 코드 발급 완료 (알림 없음) - 예약자 ID: {}", reserverId);
-        } catch (Exception e) {
-            log.error("QR 코드 발급 실패 (알림 없음) - 예약자 ID: {}, 오류: {}", reserverId, e.getMessage(), e);
-            throw new CustomException(CustomErrorCode.QR_GENERATION_FAILED);
-        }
+        QrCode qrCode = qrCodeGenerateService.createQrCode(reserver);
+        qrCodeRepository.save(qrCode);
     }
 
     @Override
@@ -107,22 +98,16 @@ public class QrCodeServiceImpl implements QrCodeService {
             throw new CustomException(CustomErrorCode.QR_INVALID_STATUS);
         }
 
-        try {
-            log.info("기존 QR 코드 삭제 처리 - QR ID: {}", existing.getId());
-            qrCodeRepository.delete(existing);
-            qrCodeRepository.flush();
+        log.info("기존 QR 코드 삭제 처리 - QR ID: {}", existing.getId());
+        qrCodeRepository.delete(existing);
+        qrCodeRepository.flush();
 
-            QrCode qrCode = qrCodeGenerateService.createQrCode(reserver);
-            qrCodeRepository.save(qrCode);
-            log.info("QR 코드 재발급 완료 - 예약자 ID: {}", reserverId);
+        QrCode qrCode = qrCodeGenerateService.createQrCode(reserver);
+        qrCodeRepository.save(qrCode);
+        log.info("QR 코드 재발급 완료 - 예약자 ID: {}", reserverId);
 
-            // QR 재발급 성공 알림 전송
-            qrNotificationService.sendQrIssuedNotification(reserver, true);
-        } catch (Exception e) {
-            log.error("QR 코드 재발급 실패 - 예약자 ID: {}, 관리자 ID: {}, 오류: {}",
-                    reserverId, adminMemberId, e.getMessage(), e);
-            throw new CustomException(CustomErrorCode.QR_REISSUE_FAILED);
-        }
+        // QR 재발급 성공 알림 전송 (try-catch로 예외 허용)
+        qrNotificationService.sendQrIssuedNotification(reserver, true);
 
     }
 
@@ -138,13 +123,13 @@ public class QrCodeServiceImpl implements QrCodeService {
 
         // ACTIVE인 경우만 상태 변경
         boolean wasActive = qr.getStatus() == QrCodeStatus.ACTIVE;
+
         if (wasActive) {
             qr.markAsUsed();
         }
         log.info("QR 코드 사용 처리 완료 - QR ID: {}, 예약자 ID: {}, 사용처리됨: {}",
                 qr.getId(), qr.getReserver().getId(), wasActive);
 
-        // 매퍼를 통해 응답 생성 (사용 처리 성공/실패 구분)
         return qrResponseMapper.toUseResponse(qr, wasActive);
     }
 
@@ -159,12 +144,7 @@ public class QrCodeServiceImpl implements QrCodeService {
         QrCode qrCode = qrCodeRepository.findByReserver(reserver)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.QR_NOT_FOUND));
 
-        String url = qrCode.getQrImageUrl();
-        if (url == null) {
-            throw new CustomException(CustomErrorCode.QR_NOT_FOUND);
-        }
-
-        return url;
+        return qrCode.getQrImageUrl();
     }
 
     @Override
@@ -175,12 +155,7 @@ public class QrCodeServiceImpl implements QrCodeService {
         QrCode qrCode = qrCodeRepository.findByQrToken(token)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.QR_NOT_FOUND));
 
-        String url = qrCode.getQrImageUrl();
-        if (url == null) {
-            throw new CustomException(CustomErrorCode.QR_NOT_FOUND);
-        }
-
-        return url;
+        return qrCode.getQrImageUrl();
     }
 
     private void validateAdminPermission(Long adminId, Reserver reserver, LoginType loginType) {
@@ -240,7 +215,9 @@ public class QrCodeServiceImpl implements QrCodeService {
             return;
         }
 
-        Reservation reservation = reservers.get(0).getReservation();
+        Reservation reservation = reservationRepository.findById(reservationId)
+            .orElseThrow(() -> new CustomException(CustomErrorCode.RESERVATION_NOT_FOUND));
+
         Expo expo = reservation.getExpo();
         LocalDate today = LocalDate.now();
         LocalDate expoStartDate = expo.getStartDate();
@@ -270,7 +247,7 @@ public class QrCodeServiceImpl implements QrCodeService {
                     log.debug("즉시 QR 코드 생성 완료 - 예약자 ID: {}", reserver.getId());
 
                     successCount++;
-                    shouldSendNotification = true; // 하나라도 성공하면 알림 전송
+
                 } catch (Exception e) {
                     log.error("즉시 QR 코드 생성 실패 - 예약자 ID: {}, 오류: {}",
                             reserver.getId(), e.getMessage(), e);
@@ -279,7 +256,8 @@ public class QrCodeServiceImpl implements QrCodeService {
             }
 
             // 2단계: QR 생성이 성공한 경우에만 예약별 알림 전송 (1회)
-            if (shouldSendNotification && reservation.getUserType() == UserType.MEMBER) {
+            // 알림 전송 실패해도 진행한다.
+            if (successCount >= 1 && reservation.getUserType() == UserType.MEMBER) {
                 try {
                     Long memberId = reservation.getUserId();
                     String expoTitle = reservation.getExpo().getTitle();
@@ -288,7 +266,7 @@ public class QrCodeServiceImpl implements QrCodeService {
 
                     log.info("QR 발급 알림 처리 완료 - 예약 ID: {}, 회원 ID: {}", reservationId, memberId);
                 } catch (Exception e) {
-                    log.error("QR 발급 알림 처리 실패 - 예약 ID: {}, 오류: {}", reservationId, e.getMessage(), e);
+                    log.error( "QR 발급 알림 처리 실패 - 예약 ID: {}, 오류: {}", reservationId, e.getMessage(), e );
                 }
             }
 
