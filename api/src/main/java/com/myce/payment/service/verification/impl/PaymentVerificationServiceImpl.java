@@ -48,6 +48,7 @@ public class PaymentVerificationServiceImpl implements PaymentVerificationServic
     @Override
     @Transactional
     public PaymentVerifyResponse verifyPayment(PaymentVerifyInfo verifyInfo) {
+        validateTarget(verifyInfo);
         // 1) 결제 사용자 식별 (예약/광고/박람회 구분)
         UserIdentifier userIdentifier = identifyUser(verifyInfo.getTargetType(), verifyInfo.getTargetId());
         if (userIdentifier == null) {
@@ -86,6 +87,7 @@ public class PaymentVerificationServiceImpl implements PaymentVerificationServic
     @Override
     @Transactional
     public PaymentVerifyResponse verifyVbankPayment(PaymentVerifyInfo verifyInfo) {
+        validateTarget(verifyInfo);
         // 1) 결제 사용자 식별
         UserIdentifier userIdentifier = identifyUser(verifyInfo.getTargetType(), verifyInfo.getTargetId());
         if (userIdentifier == null) {
@@ -143,6 +145,15 @@ public class PaymentVerificationServiceImpl implements PaymentVerificationServic
         }
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         return UserIdentifier.builder().userType(UserType.MEMBER).userId(userDetails.getUserId()).build();
+    }
+
+    private void validateTarget(PaymentVerifyInfo verifyInfo) {
+        if (verifyInfo == null || verifyInfo.getTargetType() == null || verifyInfo.getTargetId() == null) {
+            throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
+        }
+        if (verifyInfo.getTargetId() <= 0) {
+            throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
+        }
     }
 
     // 결제 대상별 세부 결제 정보 저장(Reservation, Ad, Expo)

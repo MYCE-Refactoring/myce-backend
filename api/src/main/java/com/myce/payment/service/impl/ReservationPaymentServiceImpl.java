@@ -11,6 +11,7 @@ import com.myce.expo.service.info.TicketService;
 import com.myce.payment.dto.*;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.payment.entity.type.PaymentStatus;
+import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
 import com.myce.payment.service.ReservationPaymentService;
 import com.myce.payment.service.mapper.PaymentMapper;
@@ -77,6 +78,8 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                     .merchantUid(request.getMerchantUid())
                     .amount(request.getAmount())
                     .reservationId(reservationId)
+                    .targetType(PaymentTargetType.RESERVATION)
+                    .targetId(reservationId)
                     .build();
             // payment 내부 API 호출 (응답 DTO 수신) ->TODO  상태값만 체크 post랑 get 중에 DTO 바로 넘겨도 되는지 해도 상관 없는지 check -
             //            ResponseEntity<PaymentInternalResponse>  internalResponse = // http 상태값 받아올수 있다
@@ -182,6 +185,8 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                     .merchantUid(request.getMerchantUid())
                     .amount(paidAmount)
                     .reservationId(reservationId)
+                    .targetType(PaymentTargetType.RESERVATION)
+                    .targetId(reservationId)
                     .build();
 
             PaymentInternalResponse body = paymentInternalClient.verifyAndSaveVbank(internalRequest);

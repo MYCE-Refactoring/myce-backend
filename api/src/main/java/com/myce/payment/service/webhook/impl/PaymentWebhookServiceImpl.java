@@ -41,6 +41,13 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     @Override
     @Transactional
     public void processWebhook(PortOneWebhookRequest request) {
+        // 0) ready 등 paid가 아닌 상태는 무시 (PortOne 재조회 불필요)
+        String requestStatus = request.getStatus();
+        if (requestStatus == null || !PORTONE_STATUS_PAID.equalsIgnoreCase(requestStatus)) {
+            log.info("[웹훅 무시] 포트원 상태가 paid 아님. status={}", requestStatus);
+            return;
+        }
+
         // 1) PortOne 조회/paidAt 갱신은 payment 내부로 위임 (core는 도메인 상태만 갱신)
         PaymentWebhookInternalResponse internalResponse = paymentInternalService.processWebhook(
                 PaymentWebhookInternalRequest.builder()

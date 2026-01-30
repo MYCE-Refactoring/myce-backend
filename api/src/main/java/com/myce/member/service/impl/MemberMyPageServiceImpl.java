@@ -118,7 +118,7 @@ public class MemberMyPageServiceImpl implements MemberMyPageService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        return new PageImpl<>(responses, pageable, responses.size());
+        return new PageImpl<>(responses, pageable, reservations.getTotalElements());
     }
 
     @Override

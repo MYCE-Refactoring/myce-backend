@@ -72,7 +72,7 @@ public class PaymentController {
     return ResponseEntity.ok().build();
   }
 
-  // 광고 통합 환불 API - 포트원 환불 + 광고 상태 변경 + 결제 상태 변경을 한번에 처리
+  // 광고 통합 환불 API - payment internal 환불 + 광고 상태 변경 + 결제 상태 변경을 한번에 처리
   @PostMapping("/ad-refund")
   public ResponseEntity<RefundInternalResponse> processAdRefund(
           @RequestBody AdRefundRequest request) {
