@@ -38,7 +38,7 @@ public class Ticket {
     @Column(name = "price", nullable = false)
     private Integer price;
 
-    @Column(name = "remaining_quantity", nullable = false)
+    @Column(name = "remaining_quantity")
     private Integer remainingQuantity;
 
     @Column(name = "total_quantity", nullable = false)

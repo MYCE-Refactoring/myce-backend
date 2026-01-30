@@ -102,6 +102,7 @@ public class ExpoBoothServiceImpl implements ExpoBoothService {
             if (request.getIsPremium() != null && request.getIsPremium()) {
                 // 이미 3개의 프리미엄 부스가 있는지 확인
                 long premiumBoothCount = boothRepository.countByExpoIdAndIsPremiumTrue(expoId);
+
                 if (premiumBoothCount >= 3) {
                     throw new CustomException(CustomErrorCode.BOOTH_PREMIUM_MAX_CAPACITY_REACHED);
                 }

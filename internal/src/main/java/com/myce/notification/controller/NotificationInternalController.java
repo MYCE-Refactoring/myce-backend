@@ -26,9 +26,11 @@ public class NotificationInternalController {
     public ResponseEntity<Void> ensureViewable(@RequestBody EnsureRequest req) {
         log.info("[ensureViewable] expoId={}, memberId={}, loginType={}, permission={}",
                 req.getExpoId(), req.getMemberId(), req.getLoginType(), req.getPermission());
+
         expoAdminAccessValidate.ensureViewable(
                 req.getExpoId(), req.getMemberId(), req.getLoginType(), req.getPermission()
         );
+
         return ResponseEntity.noContent().build();
     }
 

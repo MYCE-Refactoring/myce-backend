@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface BoothRepository extends JpaRepository<Booth, Long> {
+
     long countByExpoIdAndIsPremiumTrue(Long expoId);
 
     boolean existsByExpoIdAndIsPremiumTrueAndDisplayRank(Long expoId, Integer displayRank);
