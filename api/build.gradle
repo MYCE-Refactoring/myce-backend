@@ -13,6 +13,7 @@ dependencies {
 	implementation project(':common')
 	implementation platform('org.springframework.ai:spring-ai-bom:1.0.0-M6')
 
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'

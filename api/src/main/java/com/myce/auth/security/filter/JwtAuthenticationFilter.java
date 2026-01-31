@@ -27,7 +27,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String method = request.getMethod();
         log.debug("[JwtAuthenticationFilter] Input uri={}, method={}", uri, method);
 
+
+        if (uri != null && uri.startsWith("/actuator/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authValue = request.getHeader(InternalHeaderKey.INTERNAL_AUTH);
+
         if (authValue == null || !authValue.equals(INTERNAL_AUTH_VALUE)) {
             log.info("Not exist auth value. authValue={}", authValue);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -71,5 +78,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 다음 필터로
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri != null && uri.startsWith("/actuator/");
     }
 }

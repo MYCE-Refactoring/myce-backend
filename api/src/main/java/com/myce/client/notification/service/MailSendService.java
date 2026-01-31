@@ -1,9 +1,12 @@
 package com.myce.client.notification.service;
 
 import com.myce.client.notification.dto.NotificationEndPoints;
+import com.myce.common.exception.CustomErrorCode;
+import com.myce.common.exception.CustomException;
 import com.myce.reservation.entity.code.UserType;
 import com.myce.client.notification.NotificationInternalClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -22,7 +25,11 @@ public class MailSendService {
                 "subject", subject,
                 "content", content
         );
-        notificationInternalClient.send(NotificationEndPoints.MAIL_SEND,body);
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.MAIL_SEND, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.MAIL_SEND_FAILED);
+        }
 
     }
     public void sendMailToMultiple(List<String> recipients, String subject, String content) {
@@ -33,7 +40,11 @@ public class MailSendService {
                 "content", content
 
         );
-        notificationInternalClient.send(NotificationEndPoints.MULTI_MAIL_SEND,body);
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.MULTI_MAIL_SEND, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.MAIL_SEND_FAILED);
+        }
     }
     public void sendSupportMail(String to, String subject, String content
     ) {
@@ -42,7 +53,12 @@ public class MailSendService {
                 "subject", subject,
                 "content", content
         );
-        notificationInternalClient.send( NotificationEndPoints.SUPPORT_MAIL_SEND,body);
+
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.SUPPORT_MAIL_SEND, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.MAIL_SEND_FAILED);
+        }
 
     }
 
@@ -53,7 +69,13 @@ public class MailSendService {
                 "code", code,
                 "limitTime", limitTime
         );
-        notificationInternalClient.send(NotificationEndPoints.VERIFICATION_MAIL_SEND,body);
+
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.VERIFICATION_MAIL_SEND, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.MAIL_SEND_FAILED);
+        }
+
 
     }
 
@@ -63,7 +85,13 @@ public class MailSendService {
                 "email", email,
                 "password", password
         );
-        notificationInternalClient.send(NotificationEndPoints.RESET_MAIL_SEND,body);
+
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.RESET_MAIL_SEND, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.MAIL_SEND_FAILED);
+        }
+
 
     }
 
@@ -79,7 +107,12 @@ public class MailSendService {
                 "paymentAmount", paymentAmount,
                 "userType", userType
         );
-        notificationInternalClient.send( NotificationEndPoints.RESERVATION_CONFIRM_MAIL_SEND,body);
+
+        ResponseEntity<Void> res = notificationInternalClient.send(NotificationEndPoints.RESERVATION_CONFIRM_MAIL_SEND, body);
+
+        if (!res.getStatusCode().is2xxSuccessful()) {
+            throw new CustomException( CustomErrorCode.MAIL_SEND_FAILED);
+        }
 
     }
 }

@@ -1,6 +1,6 @@
 package com.myce.schedule.jobs;
 
-import com.myce.reservation.service.VirtualBankExpireService;
+import com.myce.reservation.service.ReservationVirtualBankExpireService;
 import com.myce.schedule.TaskScheduler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class VirtualBankExpireScheduler implements TaskScheduler {
     
-    private final VirtualBankExpireService virtualBankExpireService;
+    private final ReservationVirtualBankExpireService reservationVirtualBankExpireService;
 
     @PostConstruct
     public void init() {
@@ -34,6 +34,6 @@ public class VirtualBankExpireScheduler implements TaskScheduler {
 
     @Override
     public void process() {
-        virtualBankExpireService.processExpiredVirtualBankReservations();
+        reservationVirtualBankExpireService.processExpiredVirtualBankReservations();
     }
 }

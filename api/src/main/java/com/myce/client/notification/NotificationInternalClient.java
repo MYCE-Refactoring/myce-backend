@@ -15,8 +15,9 @@ public class NotificationInternalClient {
         return notificationClient.post()
                 .uri(path)
                 .body(body)
-                .retrieve()
-                .toEntity(Void.class);
+                .exchange((req, res) -> ResponseEntity
+                        .status(res.getStatusCode())
+                        .build() );
     }
 
     public <T> T receive(String path, Class<T> responseType) {
