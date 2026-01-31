@@ -48,9 +48,7 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
     private final ReserverService reserverService;
     private final ExpoTicketService expoTicketService;
     private final PaymentCommonService paymentCommonService;
-    private final GuestReservationService guestReservationService;
     private final ReservationGuestService reservationGuestService;
-    private final VerifyPaymentService verifyPaymentService; //-> Payment에서
     private final PaymentInternalService paymentInternalClient;
 
     @Override

@@ -39,7 +39,6 @@ public class AdApplicationServiceImpl implements AdApplicationService {
     private final RefundInternalService refundInternalService;;
     private final AdFeeSettingRepository adFeeSettingRepository;
     private final NotificationService notificationService;
-    private final AdStatusService adStatusService;
     private final PaymentInternalService paymentInternalService;
     private final AdStatusValidateComponent adStatusValidateComponent;
 

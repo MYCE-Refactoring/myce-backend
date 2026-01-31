@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AdPlatformCurrentServiceImpl implements AdPlatformCurrentService {
     private final AdRepository adRepository;
-    private final AdStatusService adStatusService;
     private final RefundInternalService refundInternalService;
     private final PaymentRefundService paymentRefundService;
     private final AdStatusValidateComponent adStatusValidateComponent;

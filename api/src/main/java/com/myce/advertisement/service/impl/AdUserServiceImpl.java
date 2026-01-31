@@ -21,7 +21,6 @@ import com.myce.advertisement.entity.Advertisement;
 import com.myce.system.repository.AdPositionRepository;
 import com.myce.advertisement.repository.AdRepository;
 import com.myce.advertisement.service.AdUserService;
-import com.myce.advertisement.service.UserAdService;
 import com.myce.common.dto.RegistrationCompanyRequest;
 import com.myce.common.entity.BusinessProfile;
 import com.myce.common.entity.type.TargetType;
