@@ -2,7 +2,7 @@ package com.myce.reservation.service.mapper;
 
 import com.myce.expo.entity.Expo;
 import com.myce.expo.entity.Ticket;
-import com.myce.payment.entity.Payment;
+import com.myce.payment.dto.PaymentInternalDetailResponse;
 import com.myce.reservation.dto.PreReservationRequest;
 import com.myce.reservation.dto.ReservationPaymentSummaryResponse;
 import com.myce.reservation.dto.ReservationPendingRequest;
@@ -56,7 +56,7 @@ public class ReservationMapper {
         .build();
   }
 
-  public ReservationPendingResponse toPendingResponse(Payment payment, Integer amount, String dueDate){
+  public ReservationPendingResponse toPendingResponse(PaymentInternalDetailResponse payment, Integer amount, String dueDate){
     return ReservationPendingResponse.builder()
         .accountBank(payment.getAccountBank())
         .accountNumber(payment.getAccountNumber())

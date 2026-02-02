@@ -5,15 +5,14 @@ import com.myce.advertisement.entity.Advertisement;
 import com.myce.common.entity.RejectInfo;
 import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.AdPaymentInfo;
-import com.myce.payment.entity.Payment;
-import com.myce.payment.entity.Refund;
+import com.myce.payment.dto.PaymentInternalDetailResponse;
 import com.myce.payment.entity.type.PaymentMethod;
 
 import java.util.HashMap;
 
 public class AdInfoMapper {
     public static AdCancelInfoCheck getAdCancelInfoCheck(
-            Payment payment, Advertisement ad, Integer totalAmount) {
+            PaymentInternalDetailResponse payment, Advertisement ad, Integer totalAmount) {
         PaymentTypeResult paymentTypeResult = getResult(payment, payment.getPaymentMethod());
 
         return AdCancelInfoCheck.builder()
@@ -29,7 +28,7 @@ public class AdInfoMapper {
     }
 
     public static AdPaymentHistoryResponse getPaymentInfoResponse(AdPaymentInfo adPaymentInfo,
-                                                                  Payment payment){
+                                                                  PaymentInternalDetailResponse payment){
         Advertisement advertisement = adPaymentInfo.getAdvertisement();
         PaymentTypeResult paymentTypeResult = getResult(payment, payment.getPaymentMethod());
 
@@ -47,7 +46,7 @@ public class AdInfoMapper {
     }
 
     public static AdCancelHistoryResponse getAdCancelInfoResponse(
-            Advertisement advertisement, Payment payment, RefundInternalResponse refund) {
+            Advertisement advertisement, PaymentInternalDetailResponse payment, RefundInternalResponse refund) {
         PaymentMethod paymentMethod = payment.getPaymentMethod();
         PaymentTypeResult paymentTypeResult = getResult(payment, paymentMethod);
 
@@ -82,7 +81,7 @@ public class AdInfoMapper {
                 .build();
     }
 
-    private static PaymentTypeResult getResult(Payment payment, PaymentMethod paymentMethod) {
+    private static PaymentTypeResult getResult(PaymentInternalDetailResponse payment, PaymentMethod paymentMethod) {
         String paymentCompanyName;
         String paymentAccountInfo;
         // 계좌이체일때 - account_number

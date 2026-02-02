@@ -18,14 +18,10 @@ import com.myce.expo.service.platform.mapper.ExpoPaymentInfoMapper;
 import com.myce.expo.service.platform.mapper.RejectInfoMapper;
 import com.myce.client.notification.service.NotificationService;
 import com.myce.payment.entity.ExpoPaymentInfo;
-import com.myce.payment.entity.Payment;
-import com.myce.payment.entity.Refund;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.entity.type.RefundStatus;
 import com.myce.payment.repository.ExpoPaymentInfoRepository;
-import com.myce.payment.repository.PaymentRepository;
-import com.myce.payment.repository.RefundRepository;
 import com.myce.payment.service.refund.PaymentRefundService;
 import com.myce.payment.dto.PaymentRefundRequest;
 import com.myce.expo.dto.ExpoPaymentPreviewResponse;
@@ -202,7 +198,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
             processIndividualReservationRefunds(expoId);
             
             // 박람회 주최자 부분 환불 처리
-            processRefundToPortOne(expoId, paymentInfo);
+            processRefundViaPaymentInternal(expoId, paymentInfo);
 
             // 박람회 상태 변경
             ExpoStatus oldStatus = expo.getStatus();
@@ -217,8 +213,8 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
             // 5-2. PENDING_PUBLISH 상태였던 경우: 기존 로직 그대로 (전액 환불)
             log.info("PENDING_PUBLISH 상태 박람회 취소 승인 처리 - expoId: {}", expoId);
             
-            // 포트원 환불 처리
-            processRefundToPortOne(expoId, paymentInfo);
+            // payment internal 환불 처리
+            processRefundViaPaymentInternal(expoId, paymentInfo);
             
             // 박람회 상태 변경 (PENDING_CANCEL -> CANCELLED)
             ExpoStatus oldStatus = expo.getStatus();
@@ -264,12 +260,12 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
     }
     
     /**
-     * 포트원 환불 처리 및 Refund 테이블 생성
+     * payment internal 환불 처리 및 Refund 테이블 갱신
      * 
      * @param expoId 박람회 ID
      * @param paymentInfo 박람회 결제 정보
      */
-    private void processRefundToPortOne(Long expoId, ExpoPaymentInfo paymentInfo) {
+    private void processRefundViaPaymentInternal(Long expoId, ExpoPaymentInfo paymentInfo) {
         // 1) 환불 신청 존재 확인 (internal 조회)
         RefundInternalResponse refundInfo =
                 refundInternalService.getRefundByTarget(PaymentTargetType.EXPO, expoId);
@@ -282,7 +278,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
         // 2) impUid 조회 (payment DB 직접 접근 제거)
         String impUid = refundInternalService.getImpUid(PaymentTargetType.EXPO, expoId);
         
-        // 3. 포트원 환불 요청 생성
+        // 3. 환불 요청 생성
         PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
                 .impUid(impUid)
                 .cancelAmount(null)
@@ -438,7 +434,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
     
     /**
      * 개별 예약자 환불 처리
-     * 예약 상태 변경, 결제 정보 환불 처리, 포트원 환불 API 호출, 티켓 재고 복구
+     * 예약 상태 변경, 결제 정보 환불 처리, payment internal 환불 실행, 티켓 재고 복구
      * 
      * @param reservation 환불 처리할 예약 정보
      */
@@ -459,7 +455,7 @@ public class PlatformExpoManageServiceImpl implements PlatformExpoManageService 
         // 3) impUid 조회 (payment internal)
         String impUid = refundInternalService.getImpUid(PaymentTargetType.RESERVATION, reservationId);
         
-        // 6. 포트원 환불 API 호출
+        // 6. payment internal 환불 실행
         PaymentRefundRequest refundRequest = PaymentRefundRequest.builder()
                 .impUid(impUid)
                 .cancelAmount(null) // null = 전액 환불

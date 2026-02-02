@@ -1,7 +1,7 @@
 package com.myce.reservation.service.mapper;
 
 import com.myce.member.entity.MemberGrade;
-import com.myce.payment.entity.Payment;
+import com.myce.payment.dto.PaymentInternalDetailResponse;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.qrcode.entity.QrCode;
 import com.myce.qrcode.repository.QrCodeRepository;
@@ -30,8 +30,8 @@ public class ReservationDetailMapper {
                 .build();
     }
     
-    public ReservationDetailResponse toResponseDto(Reservation reservation, List<Reserver> reservers, 
-                                                  ReservationPaymentInfo paymentInfo, Payment payment, MemberGrade memberGrade) {
+    public ReservationDetailResponse toResponseDto(Reservation reservation, List<Reserver> reservers,
+                                                  ReservationPaymentInfo paymentInfo, PaymentInternalDetailResponse payment, MemberGrade memberGrade) {
         return ReservationDetailResponse.builder()
                 .expoInfo(buildExpoInfo(reservation))
                 .reservationInfo(buildReservationInfo(reservation))
@@ -102,13 +102,15 @@ public class ReservationDetailMapper {
                 .collect(Collectors.toList());
     }
     
-    private ReservationDetailResponse.PaymentInfo buildPaymentInfo(ReservationPaymentInfo paymentInfo, 
-                                                                   Payment payment, MemberGrade memberGrade) {
+    private ReservationDetailResponse.PaymentInfo buildPaymentInfo(ReservationPaymentInfo paymentInfo,
+                                                                   PaymentInternalDetailResponse payment, MemberGrade memberGrade) {
         if (paymentInfo == null) {
             return null;
         }
         
-        String paymentMethod = payment != null ? payment.getPaymentMethod().name() : null;
+        String paymentMethod = payment != null && payment.getPaymentMethod() != null
+                ? payment.getPaymentMethod().name()
+                : null;
         String paymentDetail = null;
         
         if (payment != null) {

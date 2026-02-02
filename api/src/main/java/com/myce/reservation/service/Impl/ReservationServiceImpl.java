@@ -12,10 +12,10 @@ import com.myce.member.entity.Member;
 import com.myce.member.entity.MemberGrade;
 import com.myce.member.repository.GuestRepository;
 import com.myce.member.repository.MemberRepository;
-import com.myce.payment.entity.Payment;
+import com.myce.client.payment.service.PaymentInternalService;
+import com.myce.payment.dto.PaymentInternalDetailResponse;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.payment.entity.type.PaymentTargetType;
-import com.myce.payment.repository.PaymentRepository;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
 import com.myce.qrcode.service.QrCodeService;
 import com.myce.reservation.dto.PreReservationCacheDto;
@@ -66,10 +66,10 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationCodeService reservationCodeService;
     private final MemberRepository memberRepository;
     private final GuestRepository guestRepository;
-    private final PaymentRepository paymentRepository;
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
     private final PreReservationRepository preReservationRepository;
     private final QrCodeService qrCodeService;
+    private final PaymentInternalService paymentInternalService;
 
     @Override
     public ReservationDetailResponse getReservationDetail(Long reservationId, CustomUserDetails currentUser) {
@@ -83,7 +83,8 @@ public class ReservationServiceImpl implements ReservationService {
         
         // 결제 정보 조회
         ReservationPaymentInfo paymentInfo = reservationPaymentInfoRepository.findByReservationId(reservationId).orElse(null);
-        Payment payment = paymentRepository.findByTargetIdAndTargetType(reservationId, PaymentTargetType.RESERVATION).orElse(null);
+        PaymentInternalDetailResponse payment =
+                paymentInternalService.getPaymentByTarget(PaymentTargetType.RESERVATION, reservationId);
         
         // 회원 등급 정보 조회 (회원인 경우만)
         MemberGrade memberGrade = null;
@@ -281,8 +282,11 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public ReservationPendingResponse getVirtualAccountInfo(Long reservationId) {
-        Payment payment = paymentRepository.findByTargetIdAndTargetType(reservationId, PaymentTargetType.RESERVATION)
-            .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_NOT_FOUND));
+        PaymentInternalDetailResponse payment =
+                paymentInternalService.getPaymentByTarget(PaymentTargetType.RESERVATION, reservationId);
+        if (payment == null) {
+            throw new CustomException(CustomErrorCode.PAYMENT_NOT_FOUND);
+        }
         ReservationPaymentInfo reservationPaymentInfo = reservationPaymentInfoRepository.findByReservationId(reservationId)
             .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
 
@@ -315,9 +319,8 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         // 결제 완료된 경우 Payment 정보와 Member 등급 조회
-        Payment payment = paymentRepository
-                .findByTargetIdAndTargetType(reservationId, PaymentTargetType.RESERVATION)
-                .orElse(null);
+        PaymentInternalDetailResponse payment =
+                paymentInternalService.getPaymentByTarget(PaymentTargetType.RESERVATION, reservationId);
 
         MemberGrade memberGrade = null;
         if (reservation.getUserType().equals(UserType.MEMBER)) {

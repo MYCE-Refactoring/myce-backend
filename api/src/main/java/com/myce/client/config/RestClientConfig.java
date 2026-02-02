@@ -36,10 +36,9 @@ public class RestClientConfig {
                 .build();
     }
 
-
     @Bean(name = "paymentClient")
-    public RestClient paymentClient(RestClient.Builder lbRestClientBuilder) {
-        return lbRestClientBuilder
+    public RestClient paymentClient() {
+        return RestClient.builder()
                 .baseUrl(paymentBaseUrl)
                 .defaultHeader(InternalHeaderKey.INTERNAL_AUTH, externalAuthValue)
                 .build();

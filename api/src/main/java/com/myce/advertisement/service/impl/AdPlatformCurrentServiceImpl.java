@@ -3,6 +3,7 @@ package com.myce.advertisement.service.impl;
 import com.myce.advertisement.dto.AdCancelInfoCheck;
 import com.myce.advertisement.entity.Advertisement;
 import com.myce.advertisement.repository.AdRepository;
+import com.myce.client.payment.service.PaymentInternalService;
 import com.myce.client.payment.service.RefundInternalService;
 import com.myce.advertisement.service.AdPlatformCurrentService;
 import com.myce.advertisement.service.mapper.AdInfoMapper;
@@ -11,35 +12,37 @@ import com.myce.common.exception.CustomException;
 import com.myce.payment.dto.PaymentRefundRequest;
 import com.myce.payment.dto.RefundInternalRequest;
 import com.myce.payment.dto.RefundInternalResponse;
-import com.myce.payment.entity.Payment;
+import com.myce.payment.dto.PaymentInternalDetailResponse;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.entity.type.RefundStatus;
 import com.myce.payment.service.refund.PaymentRefundService;
-import com.myce.payment.repository.PaymentRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AdPlatformCurrentServiceImpl implements AdPlatformCurrentService {
     private final AdRepository adRepository;
-    private final PaymentRepository paymentRepository;
     private final RefundInternalService refundInternalService;
     private final PaymentRefundService paymentRefundService;
     private final AdStatusValidateComponent adStatusValidateComponent;
 
+    private final PaymentInternalService paymentInternalService;
 
     public AdCancelInfoCheck generateCancelCheck(Long adId) {
         log.info("generateCancelCheck - Advertisement Id : {}, targetType : {}", adId, PaymentTargetType.AD.name());
         Advertisement ad = adRepository
                 .findById(adId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.AD_NOT_FOUND));
-        Payment payment = paymentRepository
-                .findByTargetIdAndTargetType(ad.getId(), PaymentTargetType.AD)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
+        PaymentInternalDetailResponse payment =
+                paymentInternalService.getPaymentByTarget(PaymentTargetType.AD, ad.getId());
+        if (payment == null) {
+            throw new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND);
+        }
         // 환불 조회는 payment internal로 위임 (조회용)
         RefundInternalResponse refund = refundInternalService.getRefundByTarget(
                 PaymentTargetType.AD, adId);

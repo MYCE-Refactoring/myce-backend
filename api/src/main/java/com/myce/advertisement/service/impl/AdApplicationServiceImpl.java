@@ -7,6 +7,7 @@ import com.myce.advertisement.repository.AdRepository;
 import com.myce.advertisement.service.AdApplicationService;
 import com.myce.advertisement.service.mapper.AdInfoMapper;
 import com.myce.client.notification.service.NotificationService;
+import com.myce.client.payment.service.PaymentInternalService;
 import com.myce.client.payment.service.RefundInternalService;
 import com.myce.common.entity.RejectInfo;
 import com.myce.common.entity.type.TargetType;
@@ -15,11 +16,10 @@ import com.myce.common.exception.CustomException;
 import com.myce.common.repository.RejectInfoRepository;
 import com.myce.payment.dto.RefundInternalResponse;
 import com.myce.payment.entity.AdPaymentInfo;
-import com.myce.payment.entity.Payment;
+import com.myce.payment.dto.PaymentInternalDetailResponse;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.repository.AdPaymentInfoRepository;
-import com.myce.payment.repository.PaymentRepository;
 import com.myce.system.entity.AdFeeSetting;
 import com.myce.system.repository.AdFeeSettingRepository;
 import jakarta.transaction.Transactional;
@@ -36,10 +36,10 @@ public class AdApplicationServiceImpl implements AdApplicationService {
     private final AdRepository adRepository;
     private final RejectInfoRepository rejectInfoRepository;
     private final AdPaymentInfoRepository adPaymentInfoRepository;
-    private final PaymentRepository paymentRepository;
     private final RefundInternalService refundInternalService;;
     private final AdFeeSettingRepository adFeeSettingRepository;
     private final NotificationService notificationService;
+    private final PaymentInternalService paymentInternalService;
     private final AdStatusValidateComponent adStatusValidateComponent;
 
     public AdPaymentInfoCheck generatePaymentCheck(Long adId) {
@@ -128,9 +128,11 @@ public class AdApplicationServiceImpl implements AdApplicationService {
         AdPaymentInfo paymentInfo = adPaymentInfoRepository
                 .findByAdvertisementId(adId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
-        Payment payment = paymentRepository
-                .findByTargetIdAndTargetType(adId, PaymentTargetType.AD)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
+        PaymentInternalDetailResponse payment =
+                paymentInternalService.getPaymentByTarget(PaymentTargetType.AD, adId);
+        if (payment == null) {
+            throw new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND);
+        }
 
         log.info("getPaymentHistory - AdPaymentInfo : {}", paymentInfo);
         return AdInfoMapper.getPaymentInfoResponse(paymentInfo, payment);
@@ -140,9 +142,11 @@ public class AdApplicationServiceImpl implements AdApplicationService {
         Advertisement advertisement = adRepository
                 .findById(adId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.AD_NOT_FOUND));
-        Payment payment = paymentRepository
-                .findByTargetIdAndTargetType(adId, PaymentTargetType.AD)
-                .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND));
+        PaymentInternalDetailResponse payment =
+                paymentInternalService.getPaymentByTarget(PaymentTargetType.AD, adId);
+        if (payment == null) {
+            throw new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND);
+        }
         // 환불 정보는 payment internal에서 조회 (core DB 직접 조회 제거)
         RefundInternalResponse refund = refundInternalService.getRefundByTarget(
                 PaymentTargetType.AD, adId);

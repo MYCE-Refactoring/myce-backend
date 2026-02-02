@@ -5,31 +5,22 @@ import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
 import com.myce.member.service.MemberAdService;
 import com.myce.member.service.MemberExpoService;
-import com.myce.payment.dto.PaymentInfoDetailDto;
-import com.myce.payment.dto.PaymentVerifyInfo;
-import com.myce.payment.dto.PaymentVerifyResponse;
-import com.myce.payment.dto.UserIdentifier;
+import com.myce.client.payment.service.PaymentInternalService;
+import com.myce.payment.dto.*;
 import com.myce.payment.entity.AdPaymentInfo;
 import com.myce.payment.entity.ExpoPaymentInfo;
-import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.ReservationPaymentInfo;
-import com.myce.payment.entity.type.PaymentMethod;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.repository.AdPaymentInfoRepository;
 import com.myce.payment.repository.ExpoPaymentInfoRepository;
-import com.myce.payment.repository.PaymentRepository;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
-import com.myce.payment.service.constant.PortOneResponseKey;
 import com.myce.payment.service.impl.PaymentCommonService;
-import com.myce.payment.service.impl.VerifyPaymentService;
 import com.myce.payment.service.mapper.PaymentMapper;
-import com.myce.payment.service.portone.PortOneApiService;
 import com.myce.payment.service.verification.PaymentVerificationService;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.UserType;
 import com.myce.reservation.repository.ReservationRepository;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -43,50 +34,94 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PaymentVerificationServiceImpl implements PaymentVerificationService {
 
-    private final PortOneApiService portOneApiService;
-    private final PaymentRepository paymentRepository;
-    private final PaymentMapper paymentMapper;
+    private final PaymentInternalService paymentInternalService;
     private final ReservationRepository reservationRepository;
     private final AdPaymentInfoRepository adPaymentInfoRepository;
     private final ExpoPaymentInfoRepository expoPaymentInfoRepository;
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
+    private final PaymentMapper paymentMapper;
     private final MemberExpoService memberExpoService;
     private final MemberAdService memberAdService;
-    private final VerifyPaymentService verifyPaymentService;
     private final PaymentCommonService paymentCommonService;
 
     // 카드 결제 검증 및 저장
     @Override
     @Transactional
     public PaymentVerifyResponse verifyPayment(PaymentVerifyInfo verifyInfo) {
-        // 결제 정보 검증
-        Map<String, Object> portOnePayment = portOneApiService.getPaymentInfo(verifyInfo.getImpUid());
-        verifyPaymentService.verifyPaymentDetails(portOnePayment, verifyInfo.getAmount(), verifyInfo.getMerchantUid());
-
+        validateTarget(verifyInfo);
+        // 1) 결제 사용자 식별 (예약/광고/박람회 구분)
         UserIdentifier userIdentifier = identifyUser(verifyInfo.getTargetType(), verifyInfo.getTargetId());
-        if(userIdentifier == null) throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
+        if (userIdentifier == null) {
+            throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
+        }
+        // 2) payment internal로 "검증 + Payment 저장" 요청
+        //    - PortOne 호출은 이제 payment 서버가 처리함
+        PaymentInternalRequest internalRequest = PaymentInternalRequest.builder()
+                .impUid(verifyInfo.getImpUid())
+                .merchantUid(verifyInfo.getMerchantUid())
+                .amount(verifyInfo.getAmount())
+                .targetType(verifyInfo.getTargetType())  // AD / EXPO / RESERVATION
+                .targetId(verifyInfo.getTargetId())
+                // 예약일 때만 reservationId 유지
+                .reservationId(verifyInfo.getTargetType() == PaymentTargetType.RESERVATION
+                        ? verifyInfo.getTargetId() : null)
+                .build();
+        PaymentInternalResponse internalResponse =
+                paymentInternalService.verifyAndSave(internalRequest);
 
-        Payment payment = savePayment(portOnePayment, verifyInfo);
-        PaymentInfoDetailDto paymentInfo = savePaymentInfoDetails(verifyInfo, PaymentStatus.SUCCESS, userIdentifier);
-        return paymentMapper.toPaymentVerifyResponse(payment, paymentInfo);
+        // 3) core는 PaymentInfo만 저장/상태 변경
+        PaymentInfoDetailDto paymentInfo =
+                savePaymentInfoDetails(verifyInfo, PaymentStatus.SUCCESS, userIdentifier);
+
+        // 4) 응답 반환 (Payment 엔티티는 이제 core에 저장하지 않음)
+        return PaymentVerifyResponse.builder()
+                .impUid(internalResponse.getImpUid())
+                .merchantUid(internalResponse.getMerchantUid())
+                .status(paymentInfo.getStatus())
+                .amount(paymentInfo.getAmount())
+                .reservationId(paymentInfo.getReservationId()) // 예약일 때만 값 있음
+                .build();
     }
 
     // 가상계좌 발급 및 상태 저장 PENDING
     @Override
     @Transactional
     public PaymentVerifyResponse verifyVbankPayment(PaymentVerifyInfo verifyInfo) {
-        // 결제 정보 검증
-        Map<String, Object> portOnePayment = portOneApiService.getPaymentInfo(verifyInfo.getImpUid());
-        int paidAmount = verifyInfo.getAmount();
-        verifyPaymentService.verifyVbankDetails(portOnePayment, paidAmount, verifyInfo.getMerchantUid());
-
+        validateTarget(verifyInfo);
+        // 1) 결제 사용자 식별
         UserIdentifier userIdentifier = identifyUser(verifyInfo.getTargetType(), verifyInfo.getTargetId());
-        Payment payment = paymentMapper.toEntity(verifyInfo, portOnePayment);
-        paymentRepository.save(payment);
+        if (userIdentifier == null) {
+            throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
+        }
 
-        PaymentInfoDetailDto paymentInfo = savePaymentInfoDetails(verifyInfo, PaymentStatus.PENDING, userIdentifier);
-        return paymentMapper.toPaymentVerifyResponse(payment, paymentInfo);
+        // 2) payment internal로 "vbank 검증 + Payment 저장" 요청
+        PaymentInternalRequest internalRequest = PaymentInternalRequest.builder()
+                .impUid(verifyInfo.getImpUid())
+                .merchantUid(verifyInfo.getMerchantUid())
+                .amount(verifyInfo.getAmount())
+                .targetType(verifyInfo.getTargetType())
+                .targetId(verifyInfo.getTargetId())
+                .reservationId(verifyInfo.getTargetType() == PaymentTargetType.RESERVATION
+                        ? verifyInfo.getTargetId() : null)
+                .build();
+
+        PaymentInternalResponse internalResponse =
+                paymentInternalService.verifyAndSaveVbank(internalRequest);
+
+        // 3) core는 PaymentInfo를 PENDING으로 저장
+        PaymentInfoDetailDto paymentInfo =
+                savePaymentInfoDetails(verifyInfo, PaymentStatus.PENDING, userIdentifier);
+
+        // 4) 응답 반환
+        return PaymentVerifyResponse.builder()
+                .impUid(internalResponse.getImpUid())
+                .merchantUid(internalResponse.getMerchantUid())
+                .status(paymentInfo.getStatus())
+                .amount(paymentInfo.getAmount())
+                .reservationId(paymentInfo.getReservationId())
+                .build();
     }
+
 
     // 결제 사용자 식별
     private UserIdentifier identifyUser(PaymentTargetType targetType, Long targetId) {
@@ -112,16 +147,13 @@ public class PaymentVerificationServiceImpl implements PaymentVerificationServic
         return UserIdentifier.builder().userType(UserType.MEMBER).userId(userDetails.getUserId()).build();
     }
 
-    private Payment savePayment(Map<String, Object> portOnePayment, PaymentVerifyInfo request) {
-        String payMethod = (String) portOnePayment.get(PortOneResponseKey.PAY_METHOD);
-        Payment payment = null;
-        if(PaymentMethod.CARD.getName().equalsIgnoreCase(payMethod)) {
-            payment = paymentMapper.toEntity(request, portOnePayment);
-        } else{
-            payment = paymentMapper.toEntityTransfer(request, portOnePayment);
+    private void validateTarget(PaymentVerifyInfo verifyInfo) {
+        if (verifyInfo == null || verifyInfo.getTargetType() == null || verifyInfo.getTargetId() == null) {
+            throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
         }
-
-        return paymentRepository.save(payment);
+        if (verifyInfo.getTargetId() <= 0) {
+            throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
+        }
     }
 
     // 결제 대상별 세부 결제 정보 저장(Reservation, Ad, Expo)

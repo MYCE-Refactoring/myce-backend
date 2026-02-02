@@ -62,7 +62,6 @@ public class MemberExpoServiceImpl implements MemberExpoService {
         expoLifeCycleService.requestExpoSettlement(memberId, expoId, request);
     }
 
-
     @Override
     public void completeExpoPayment(Long memberId, Long expoId) {
         expoLifeCycleService.completeExpoPayment(memberId, expoId);

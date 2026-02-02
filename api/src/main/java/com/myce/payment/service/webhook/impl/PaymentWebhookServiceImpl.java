@@ -1,28 +1,23 @@
 package com.myce.payment.service.webhook.impl;
 
+import com.myce.client.payment.service.PaymentInternalService;
 import com.myce.common.exception.CustomErrorCode;
 import com.myce.common.exception.CustomException;
+import com.myce.payment.dto.PaymentWebhookInternalRequest;
+import com.myce.payment.dto.PaymentWebhookInternalResponse;
 import com.myce.payment.dto.PortOneWebhookRequest;
 import com.myce.payment.entity.AdPaymentInfo;
 import com.myce.payment.entity.ExpoPaymentInfo;
-import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.ReservationPaymentInfo;
 import com.myce.payment.entity.type.PaymentStatus;
 import com.myce.payment.repository.AdPaymentInfoRepository;
 import com.myce.payment.repository.ExpoPaymentInfoRepository;
-import com.myce.payment.repository.PaymentRepository;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
-import com.myce.payment.service.constant.PortOneResponseKey;
-import com.myce.payment.service.constant.PortOneStatus;
 import com.myce.payment.service.impl.PaymentCommonService;
-import com.myce.payment.service.portone.PortOneApiService;
 import com.myce.payment.service.webhook.PaymentWebhookService;
 import com.myce.reservation.entity.Reservation;
 import com.myce.reservation.entity.code.ReservationStatus;
 import com.myce.reservation.entity.code.UserType;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
-    private final PortOneApiService portOneApiService;
-    private final PaymentRepository paymentRepository;
+    private static final String PORTONE_STATUS_PAID = "paid";
+    // payment 내부 API 호출용 (PortOne 재조회 및 paidAt 갱신은 payment 서비스에서 수행)
+    private final PaymentInternalService paymentInternalService;
     private final AdPaymentInfoRepository adPaymentInfoRepository;
     private final ExpoPaymentInfoRepository expoPaymentInfoRepository;
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
@@ -45,45 +41,59 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     @Override
     @Transactional
     public void processWebhook(PortOneWebhookRequest request) {
-        Map<String, Object> portOnePayment = portOneApiService.getPaymentInfo(request.getImpUid());
-        String status = (String) portOnePayment.get(PortOneResponseKey.STATUS);
-        String portOneMerchantUid = (String) portOnePayment.get(PortOneResponseKey.MERCHANT_UID);
-        int paidAmount = ((Number) portOnePayment.getOrDefault(PortOneResponseKey.AMOUNT, 0)).intValue();
+        // 0) ready 등 paid가 아닌 상태는 무시 (PortOne 재조회 불필요)
+        String requestStatus = request.getStatus();
+        if (requestStatus == null || !PORTONE_STATUS_PAID.equalsIgnoreCase(requestStatus)) {
+            log.info("[웹훅 무시] 포트원 상태가 paid 아님. status={}", requestStatus);
+            return;
+        }
 
-        if (!PortOneStatus.PAID.equalsIgnoreCase(status)) {
+        // 1) PortOne 조회/paidAt 갱신은 payment 내부로 위임 (core는 도메인 상태만 갱신)
+        PaymentWebhookInternalResponse internalResponse = paymentInternalService.processWebhook(
+                PaymentWebhookInternalRequest.builder()
+                        .impUid(request.getImpUid())
+                        .merchantUid(request.getMerchantUid())
+                        .build()
+        );
+
+        // 2) paid가 아니면 도메인 업데이트를 하지 않음 (ready 등은 무시)
+        String status = internalResponse.getStatus();
+        if (status == null || !PORTONE_STATUS_PAID.equalsIgnoreCase(status)) {
             log.info("[웹훅 무시] 포트원 상태가 paid 아님. status={}", status);
             return;
         }
 
-        // 결제 시점 받아옴
-        long paidAt = ((Number) portOnePayment.getOrDefault(PortOneResponseKey.PAID_AT, 0)).longValue();
-        Payment payment = paymentRepository.findByImpUid(request.getImpUid())
-                .orElseGet(() -> paymentRepository.findByMerchantUid(request.getMerchantUid())
-                        .orElseThrow(() -> new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND)));
+        // 3) paid 상태일 때만 targetType/targetId/paidAmount로 도메인 상태 갱신
+        if (internalResponse.getTargetType() == null
+                || internalResponse.getTargetId() == null
+                || internalResponse.getPaidAmount() == null) {
+            throw new CustomException(CustomErrorCode.PAYMENT_INFO_NOT_FOUND);
+        }
 
-        long targetId = payment.getTargetId();
-        switch (payment.getTargetType()) {
+        switch (internalResponse.getTargetType()) {
             case RESERVATION:
-                processReservation(targetId, paidAmount);
+                processReservation(internalResponse.getTargetId(), internalResponse.getPaidAmount());
                 break;
             case AD:
-                processAd(targetId, paidAmount);
+                processAd(internalResponse.getTargetId(), internalResponse.getPaidAmount());
                 break;
             case EXPO:
-                processExpo(targetId, paidAmount);
+                processExpo(internalResponse.getTargetId(), internalResponse.getPaidAmount());
                 break;
             default:
                 throw new CustomException(CustomErrorCode.INVALID_PAYMENT_TARGET_TYPE);
         }
 
-        // TODO 타임존 확인하기
-        payment.updateOnSuccess(LocalDateTime.ofEpochSecond(paidAt, 0, ZoneOffset.ofHours(9)));
-        paymentRepository.save(payment);
-
         log.info("[웹훅 처리 완료] imp_uid={}, merchant_uid={}, paid_at={}",
-                request.getImpUid(), portOneMerchantUid, paidAt);
+                internalResponse.getImpUid(), internalResponse.getMerchantUid(), internalResponse.getPaidAt());
     }
 
+    /**
+     * 예약 결제 성공 처리
+     * - 결제 금액 검증
+     * - 예약 상태 CONFIRMED
+     * - QR 발급 + 마일리지/알림 (회원만)
+     */
     private void processReservation(Long paymentTargetId, int paidAmount) {
         ReservationPaymentInfo reservationPaymentInfo = reservationPaymentInfoRepository
                 .findByReservationId(paymentTargetId)
@@ -119,6 +129,11 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         reservationPaymentInfoRepository.save(reservationPaymentInfo);
     }
 
+    /**
+     * 광고 결제 성공 처리
+     * - 결제 금액 검증
+     * - 광고 결제 상태 SUCCESS
+     */
     private void processAd(Long paymentTargetId, int paidAmount) {
         AdPaymentInfo adPaymentInfo = adPaymentInfoRepository
                 .findByAdvertisementId(paymentTargetId)
@@ -134,6 +149,11 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         adPaymentInfoRepository.save(adPaymentInfo);
     }
 
+    /**
+     * 박람회 결제 성공 처리
+     * - 결제 금액 검증
+     * - 박람회 결제 상태 SUCCESS
+     */
     private void processExpo(long targetId, int paidAmount) {
         ExpoPaymentInfo expoPaymentInfo = expoPaymentInfoRepository
                 .findByExpoId(targetId)
@@ -149,6 +169,10 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         expoPaymentInfoRepository.save(expoPaymentInfo);
     }
 
+    /**
+     * 중복 처리 방지용 상태 체크
+     * - SUCCESS/REFUNDED/PARTIAL_REFUNDED는 재처리 금지
+     */
     private boolean isPassStatus(PaymentStatus status) {
         return status.equals(PaymentStatus.SUCCESS)
                 || status.equals(PaymentStatus.REFUNDED)

@@ -50,12 +50,6 @@ public class ParameterStorePropertySource implements EnvironmentPostProcessor {
         mappings.put("S3_MEDIA_BUCKET_NAME", "/myce/s3-bucket-name");
         mappings.put("CLOUDFRONT_DOMAIN", "/myce/cloudfront-domain");
         
-        // PortOne Payment
-        mappings.put("PORTONE_BASE_URL", "/myce/portone-base-url");
-        mappings.put("PORTONE_API_KEY", "/myce/portone-api-key");
-        mappings.put("PORTONE_API_SECRET", "/myce/portone-api-secret");
-        mappings.put("PORTONE_CUSTOMER_CODE", "/myce/portone-customer-code");
-        
         // Email (SES)
         mappings.put("MAIL_HOST", "/myce/ses-smtp-host");
         mappings.put("MAIL_USERNAME", "/myce/ses-smtp-username");

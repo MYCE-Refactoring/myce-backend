@@ -9,16 +9,12 @@ import com.myce.expo.repository.ExpoRepository;
 import com.myce.expo.repository.TicketRepository;
 import com.myce.expo.service.info.ExpoTicketService;
 import com.myce.payment.dto.*;
-import com.myce.payment.entity.Payment;
 import com.myce.payment.entity.ReservationPaymentInfo;
-import com.myce.payment.entity.type.PaymentMethod;
 import com.myce.payment.entity.type.PaymentStatus;
-import com.myce.payment.repository.PaymentRepository;
+import com.myce.payment.entity.type.PaymentTargetType;
 import com.myce.payment.repository.ReservationPaymentInfoRepository;
 import com.myce.payment.service.ReservationPaymentService;
-import com.myce.payment.service.constant.PortOneResponseKey;
 import com.myce.payment.service.mapper.PaymentMapper;
-import com.myce.payment.service.portone.PortOneApiService;
 import com.myce.reservation.dto.GuestReservationRequest;
 import com.myce.reservation.dto.PreReservationCacheDto;
 import com.myce.reservation.dto.ReserverBulkSaveRequest;
@@ -31,7 +27,6 @@ import com.myce.reservation.service.ReservationGuestService;
 import com.myce.reservation.service.ReservationService;
 import com.myce.reservation.service.ReserverService;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 // import com.myce.client.payment.PaymentInternalClient;
@@ -44,12 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ReservationPaymentServiceImpl implements ReservationPaymentService {
-
-    private final PortOneApiService portOneApiService;// -> 이거 이제 payment 서버에서
-    private final PaymentRepository paymentRepository;
     private final ReservationPaymentInfoRepository reservationPaymentInfoRepository;
     private final ReservationRepository reservationRepository;
-    // private final PreReservationRepository preReservationRepository; -> 이제 repository에서 안함(G1)
     private final ExpoRepository expoRepository;
     private final TicketRepository ticketRepository;
     private final PaymentMapper paymentMapper;
@@ -58,8 +49,6 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
     private final ExpoTicketService expoTicketService;
     private final PaymentCommonService paymentCommonService;
     private final ReservationGuestService reservationGuestService;
-    private final VerifyPaymentService verifyPaymentService; //-> Payment에서
-    // private final PaymentInternalClient paymentClientService; // Payment 내부 API 호출 전담
     private final PaymentInternalService paymentInternalClient;
 
     @Override
@@ -87,6 +76,8 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                     .merchantUid(request.getMerchantUid())
                     .amount(request.getAmount())
                     .reservationId(reservationId)
+                    .targetType(PaymentTargetType.RESERVATION)
+                    .targetId(reservationId)
                     .build();
 
             PaymentInternalResponse body = paymentInternalClient.verifyAndSave(internalRequest);
@@ -179,6 +170,8 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                     .merchantUid(request.getMerchantUid())
                     .amount(paidAmount)
                     .reservationId(reservationId)
+                    .targetType(PaymentTargetType.RESERVATION)
+                    .targetId(reservationId)
                     .build();
 
             PaymentInternalResponse body = paymentInternalClient.verifyAndSaveVbank(internalRequest);
@@ -216,7 +209,6 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
         }
     }
 
-
     private PaymentVerifyInfo convertToPaymentVerifyInfo(
             ReservationPaymentVerifyRequest request, Long actualReservationId) {
         PaymentVerifyInfo verifyInfo = new PaymentVerifyInfo();
@@ -251,17 +243,6 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
     private Reservation saveReservation(PreReservationCacheDto cacheDto) {
         Reservation newReservation = getNewReservation(cacheDto);
         return reservationRepository.save(newReservation);
-    }
-
-    private Payment savePayment(Map<String, Object> portOnePayment, PaymentVerifyInfo verifyInfo) {
-        String payMethod = (String) portOnePayment.get(PortOneResponseKey.PAY_METHOD);
-        Payment payment;
-        if (PaymentMethod.CARD.getName().equalsIgnoreCase(payMethod)) {
-            payment = paymentMapper.toEntity(verifyInfo, portOnePayment);
-        } else {
-            payment = paymentMapper.toEntityTransfer(verifyInfo, portOnePayment);
-        }
-        return paymentRepository.save(payment);
     }
 
     private ReservationPaymentInfo saveReservationPayment(
@@ -299,6 +280,5 @@ public class ReservationPaymentServiceImpl implements ReservationPaymentService 
                         .gender(info.getGender())
                         .build()).collect(java.util.stream.Collectors.toList());
     }
-
     // destroyPreReservation() 삭제
 }
