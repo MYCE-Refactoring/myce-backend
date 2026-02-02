@@ -4,14 +4,14 @@ server:
 
 internal:
   auth:
-    value: local-gateway
+    value: ${GATEWAY_AUTH_VALUE}
 
 external:
   base-url:
     notification: lb://NOTIFICATION-API
     payment: lb://PAYMENT-INTERNAL
   auth:
-    value: internal-request
+    value: ${INTERNAL_AUTH_VALUE}
 
 logging:
   level:
@@ -83,18 +83,6 @@ spring:
         bucket:
           media: ${S3_MEDIA_BUCKET_NAME}
           cloudfront-domain: ${CLOUDFRONT_DOMAIN}
-  mail:
-    host: ${MAIL_HOST}
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls: # isActive
-            enable: true
-  
   # AI Configuration
   ai:
     bedrock:

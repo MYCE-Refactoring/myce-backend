@@ -4,7 +4,7 @@ server:
 
 external:
   auth:
-    value: internal-request
+    value: ${INTERNAL_AUTH_VALUE}
 
 logging:
   level:
