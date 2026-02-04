@@ -1,0 +1,17 @@
+package com.myce.payment.dto;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PaymentWebhookInternalRequest {
+    //포트원 웹훅에서 오는 식별자만 전달
+    private String impUid;
+    private String merchantUid;
+}

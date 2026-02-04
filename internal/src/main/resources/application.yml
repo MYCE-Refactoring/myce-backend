@@ -1,0 +1,53 @@
+server:
+  port: 8082
+  forward-headers-strategy: native
+
+external:
+  auth:
+    value: ${INTERNAL_AUTH_VALUE}
+
+logging:
+  level:
+    root: info
+    com.myce: debug
+    com.myce.common.aop.ControllerLoggingAspect: debug
+
+spring:
+  application:
+    name: core-internal
+  profiles:
+    active: ${PROFILE}
+    include:
+      - domain
+      - common
+  config: # load AWS Parameter Store variables
+    import:
+      - optional:aws-parameterstore:/myce/common
+      - optional:aws-parameterstore:/myce/${spring.profiles.active}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    persistAuthorization: true
+  api-docs:
+    path: /v3/api-docs
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
