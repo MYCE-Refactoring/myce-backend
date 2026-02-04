@@ -55,4 +55,5 @@ jobs:
           gh api -X POST /repos/MYCE-Refactoring/myce-infra/dispatches \
             -f event_type='deploy-myce-core' \
             -f client_payload[service]=${{ env.app-name }} \
-            -f client_payload[port]=${{ env.app-port }}
+            -f client_payload[port]=${{ env.app-port }} \
+            -f client_payload[deploy-host]=${{ env.private }}
