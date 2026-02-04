@@ -12,6 +12,7 @@ on:
 env:
   app-name: myce-api
   app-port: 8081
+  deploy-host: private
 
 jobs:
   build-api:
@@ -56,4 +57,4 @@ jobs:
             -f event_type='deploy-myce-core' \
             -f client_payload[service]=${{ env.app-name }} \
             -f client_payload[port]=${{ env.app-port }} \
-            -f client_payload[deploy-host]=${{ env.private }}
+            -f client_payload[deploy-host]=${{ env.deploy-host }}
