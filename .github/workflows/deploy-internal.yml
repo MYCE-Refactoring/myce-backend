@@ -9,9 +9,6 @@ on:
       - domain/**
       - .github/workflows/deploy-internal.yml
 
-permissions:
-  actions: write
-
 env:
   app-name: myce-internal
   app-port: 8082
@@ -53,9 +50,10 @@ jobs:
 
       - name: Trigger deploy ansible
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           gh api -X POST /repos/MYCE-Refactoring/myce-infra/dispatches \
             -f event_type='deploy-myce-core' \
             -f client_payload[service]=${{ env.app-name }} \
-            -f client_payload[port]=${{ env.app-port }}
+            -f client_payload[port]=${{ env.app-port }} \
+            -f client_payload[deploy-host]=${{ env.internal }}
