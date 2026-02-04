@@ -9,6 +9,9 @@ on:
       - domain/**
       - .github/workflows/deploy-api.yml
 
+permissions:
+  actions: write
+
 env:
   app-name: myce-api
   app-port: 8081
