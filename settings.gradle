@@ -1,2 +1,5 @@
-rootProject.name = 'myce'
+rootProject.name = 'myce-core'
 include 'api', 'domain', 'internal', 'common'
+
+project(':api').name = 'myce-core-api'
+project(':internal').name = 'myce-core-internal'

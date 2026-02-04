@@ -20,10 +20,10 @@ spring:
     include:
       - domain
       - common
-  config: # load .env variables
+  config: # load AWS Parameter Store variables
     import:
-      - optional:file:./.env[.properties]
-      - optional:file:../.env[.properties]
+      - optional:aws-parameterstore:/myce/common
+      - optional:aws-parameterstore:/myce/${spring.profiles.active}
 
 springdoc:
   swagger-ui:

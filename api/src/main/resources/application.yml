@@ -23,7 +23,6 @@ spring:
   application:
     name: core-api
   profiles:
-    active: ${PROFILE}
     include:
       - common
       - domain
@@ -37,8 +36,8 @@ spring:
     time-zone: Asia/Seoul
   config: # load .env variables
     import:
-      - optional:file:./.env[.properties]
-      - optional:file:../.env[.properties]
+      - optional:aws-parameterstore:/myce/common/
+      - optional:aws-parameterstore:/myce/${spring.profiles.active}/
   security:
     oauth2:
       client:
@@ -74,9 +73,9 @@ spring:
 
   cloud: # AWS S3 Configuration
     aws:
-      credentials:
-        access-key: ${AWS_ACCESS_KEY_ID:}
-        secret-key: ${AWS_SECRET_ACCESS_KEY:}
+#      credentials:
+#        access-key: ${AWS_ACCESS_KEY_ID:}
+#        secret-key: ${AWS_SECRET_ACCESS_KEY:}
       region:
         static: ${AWS_REGION:ap-northeast-2}
       s3:
@@ -122,21 +121,6 @@ management:
     web:
       exposure:
         include: health, info, metrics, prometheus
-  endpoint:
-    health:
-      enabled: true
-      probes:
-        enabled: true  # Enable liveness/readiness probes
-      show-details: when-authorized
-      group: # Correct location - under endpoint.health
-        liveness:
-          include: livenessState, ping  # Light & internal checks only
-        readiness:
-          include: readinessState, db, redis, diskSpace  # Heavy checks
-    info:
-      enabled: true
-    prometheus:
-      enabled: true
   metrics:
     export:
       prometheus:

@@ -8,7 +8,7 @@ public enum LoginType {
 
     public static LoginType fromString(String type) {
         for (LoginType loginType : LoginType.values()) {
-            if (loginType.toString().equals(type)) {
+            if (loginType.name().equals(type)) {
                 return loginType;
             }
         }
