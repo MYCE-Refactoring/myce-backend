@@ -7,6 +7,7 @@ on:
       - api/**
       - common/**
       - domain/**
+      - .github/workflows/deploy-api.yml
 
 env:
   app-name: myce-api
