@@ -4,7 +4,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app/myce-backend/internal
 
 ## 실행 파일
-COPY build/libs/*.jar myce-core-internal.jar
+COPY ./apibuild/libs/*.jar myce-core-internal.jar
 
 ## 실행 포트
 EXPOSE 8082
