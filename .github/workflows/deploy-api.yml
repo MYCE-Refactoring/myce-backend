@@ -9,6 +9,9 @@ on:
       - domain/**
       - .github/workflows/deploy-api.yml
 
+permissions:
+  actions: write
+
 env:
   app-name: myce-api
   app-port: 8081
@@ -50,7 +53,7 @@ jobs:
 
       - name: Trigger deploy ansible
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           gh api -X POST /repos/MYCE-Refactoring/myce-infra/dispatches \
             -f event_type='deploy-myce-core' \
