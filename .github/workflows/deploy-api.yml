@@ -1,4 +1,4 @@
-name: Deploy Core Internal Module to EC2
+name: Deploy Core api Module to EC2
 
 on:
   pull_request:
@@ -9,11 +9,11 @@ on:
       - domain/**
 
 env:
-  app-name: myce-internal
-  app-port: 8082
+  app-name: myce-api
+  app-port: 8081
 
 jobs:
-  build:
+  build-api:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout develop
@@ -32,10 +32,6 @@ jobs:
         run: ../gradlew clean build -x test
         working-directory: api
 
-      - name: Build internal module with gradle
-        run: ../gradle clean build -x test
-        working-directory: internal
-
       - name: Login to Docker
         uses: docker/login-action@v1
         with:
@@ -46,7 +42,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./internal/Dockerfile
+          file: ./api/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.app-name }}:latest
