@@ -12,6 +12,7 @@ on:
 env:
   app-name: myce-internal
   app-port: 8082
+  deploy-host: internal
 
 jobs:
   build-internal:
@@ -56,4 +57,4 @@ jobs:
             -f event_type='deploy-myce-core' \
             -f client_payload[service]=${{ env.app-name }} \
             -f client_payload[port]=${{ env.app-port }} \
-            -f client_payload[deploy-host]=${{ env.internal }}
+            -f client_payload[deploy-host]=${{ env.deploy-host }}
