@@ -7,6 +7,7 @@ on:
       - internal/**
       - common/**
       - domain/**
+      - .github/workflows/deploy-internal.yml
 
 env:
   app-name: myce-internal
