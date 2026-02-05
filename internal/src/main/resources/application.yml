@@ -22,8 +22,8 @@ spring:
       - common
   config: # load AWS Parameter Store variables
     import:
-      - optional:aws-parameterstore:/myce/common
-      - optional:aws-parameterstore:/myce/${spring.profiles.active}
+      - optional:aws-parameterstore:/myce/common/
+      - optional:aws-parameterstore:/myce/${spring.profiles.active}/
 
 springdoc:
   swagger-ui:
