@@ -7,6 +7,10 @@ plugins {
 bootJar { enabled = true }
 jar { enabled = false }
 
+ext {
+	set('springCloudVersion', "2023.0.3")
+}
+
 dependencies {
 	// Spring AI BOM - use M6 (latest with Bedrock Converse support)
 	implementation project(':domain')
