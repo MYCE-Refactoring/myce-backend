@@ -18,7 +18,7 @@
 
   <springProfile name="product">
 
-    <property name="APP_NAME" value="notification-api"/>
+    <property name="APP_NAME" value="core-api"/>
     <property name="LOG_PATH" value="/app/logs"/>
     <property name="LOG_FILE" value="${LOG_PATH}/application.log"/>
 
