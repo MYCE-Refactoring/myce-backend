@@ -11,11 +11,18 @@ ext {
 	set('springCloudVersion', "2023.0.3")
 }
 
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+		mavenBom 'org.springframework.ai:spring-ai-bom:1.0.0-M6'
+		mavenBom "software.amazon.awssdk:bom:2.29.29"
+	}
+}
+
 dependencies {
 	// Spring AI BOM - use M6 (latest with Bedrock Converse support)
 	implementation project(':domain')
 	implementation project(':common')
-	implementation platform('org.springframework.ai:spring-ai-bom:1.0.0-M6')
 
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -33,7 +40,6 @@ dependencies {
     implementation 'org.springframework:spring-webflux'
     implementation 'com.google.zxing:core:3.5.3' // QR코드 생성 라이브러리
 	implementation 'com.google.zxing:javase:3.5.3' // QR코드 생성
-	implementation platform("software.amazon.awssdk:bom:2.29.29")  // Spring Boot 3.4.x 호환 버전
 	implementation "software.amazon.awssdk:s3"
 	implementation "software.amazon.awssdk:ssm"  // AWS Systems Manager Parameter Store
 	implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
@@ -57,12 +63,6 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
 }
 
 
