@@ -31,7 +31,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build api module with gradle
-        run: ./gradlew :api:clean :api:build -x test
+        run: ./gradlew :myce-core-api:clean :myce-core-api:build -x test
 
       - name: Login to Docker
         uses: docker/login-action@v1
