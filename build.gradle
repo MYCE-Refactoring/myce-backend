@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'java-library'
-    id 'org.springframework.boot' version '3.5.4'
+    id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -31,7 +31,7 @@ subprojects {
     }
 
     ext {
-        set('springCloudVersion', "2025.0.0")
+        set('springCloudVersion', "2024.0.1")
         set('springCloudAwsVersion', "3.2.1")
     }
 
