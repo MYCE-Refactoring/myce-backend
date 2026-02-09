@@ -42,7 +42,7 @@ dependencies {
 	// Spring AI dependencies - Bedrock Converse API for Nova models  
 	implementation 'org.springframework.ai:spring-ai-bedrock-converse-spring-boot-starter'
 	implementation 'org.springframework.ai:spring-ai-core'  // Required for ChatClient
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 	implementation 'org.apache.poi:poi:5.4.1' //엑셀 추출 라이브러리
 	implementation 'org.apache.poi:poi-ooxml:5.4.1' //.xlsx API 포함
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
