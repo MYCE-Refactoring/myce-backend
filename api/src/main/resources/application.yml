@@ -114,6 +114,7 @@ eureka:
       defaultZone: ${EUREKA_URL}
   instance:
     prefer-ip-address: true
+    ip-address: ${CORE_API_URL}
 
 # Spring Boot Actuator configuration for ALB health checks
 management:
