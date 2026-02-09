@@ -31,8 +31,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build internal module with gradle
-        run: ../gradlew clean build -x test
-        working-directory: internal
+        run: ./gradlew :internal:clean :internal:build -x test
 
       - name: Login to Docker
         uses: docker/login-action@v1
