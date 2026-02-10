@@ -17,14 +17,12 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(List.of(
-                "https://www.myce.live",
-                "https://myce.live",
-                "https://media.myce.live",
+                "https://www.myce.cloud",
+                "https://myce.cloud",
                 "http://localhost:3000",
                 "http://localhost:5173",
                 "http://localhost:8080",
-                "http://localhost:8081",
-                "https://api.myce.live"
+                "http://localhost:8081"
         ));
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
