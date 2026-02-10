@@ -2,7 +2,6 @@ package com.myce.auth.security.provider;
 
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TokenCookieProvider {
 
-    private static final String DOMAIN = ".myce.live";
+    private static final String DOMAIN = ".myce.cloud";
     private final CheckProductProvider checkProductProvider;
 
     public ResponseCookie getCookie(String key, String token) {
