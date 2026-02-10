@@ -13,12 +13,6 @@ external:
   auth:
     value: ${INTERNAL_AUTH_VALUE}
 
-logging:
-  level:
-    root: info
-    com.myce: debug
-    com.myce.common.aop.ControllerLoggingAspect: debug
-
 spring:
   application:
     name: core-api
