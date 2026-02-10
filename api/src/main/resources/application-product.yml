@@ -27,7 +27,7 @@ server:
 # Production logging (less verbose)
 logging:
   level:
-    root: info
-    com.myce: info              # Override: was debug in base
-    com.myce.common.aop.ControllerLoggingAspect: info  # Override: was debug
+    root: debug
+    com.myce: debug              # Override: was debug in base
+    com.myce.common.aop.ControllerLoggingAspect: debug  # Override: was debug
     org.hibernate.SQL: warn     # Don't show SQL queries in production
