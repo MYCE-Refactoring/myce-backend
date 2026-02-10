@@ -42,6 +42,8 @@
       </encoder>
     </appender>
 
+    <logger name="com.myce" level="TRACE"/>
+
     <root level="DEBUG">
       <appender-ref ref="FILE"/>
     </root>
