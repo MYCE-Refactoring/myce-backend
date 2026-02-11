@@ -14,7 +14,7 @@ public class CheckProductProvider {
 
     public CheckProductProvider(@Value("${spring.profiles.active}") String profile) {
         this.isProd = profile.equals(PRODUCT_PROFILE);
-        this.redirectUrl = isProd ? "https://www.myce.live" : "http://localhost:5173";
+        this.redirectUrl = isProd ? "https://www.myce.cloud" : "http://localhost:5173";
     }
 
     public boolean isProd() {
