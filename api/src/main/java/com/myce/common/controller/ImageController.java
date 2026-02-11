@@ -34,7 +34,7 @@ public class ImageController {
     @Value("${spring.cloud.aws.s3.bucket.media}")
     private String bucketName;
 
-    @Value("${cloudfront.domain:https://media.myce.live}")
+    @Value("${cloudfront.domain:https://media.myce.cloud}")
     private String cloudfrontDomain;
 
     /**
