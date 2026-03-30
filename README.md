@@ -23,13 +23,6 @@ MYCE는 위 MICE의 개념을 기반으로, 박람회를 쉽고 스마트하게 
 
 <br/>
 
-### 👥 팀원 소개 및 역할
-<img width="1396" height="665" alt="image" src="https://github.com/user-attachments/assets/92e5810b-400e-427f-9d30-2edd3e827753" />
-
-<br/>
-<br/>
-
-
 ## ✨ 주요 기능
 <img width="1408" height="642" alt="image" src="https://github.com/user-attachments/assets/4dfd731a-e2e7-43b5-926c-2ad04b68f3d4" />
 
